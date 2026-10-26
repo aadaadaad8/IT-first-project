@@ -4,11 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("salesChart");
 
   // Create a copy of the global data and sort from highest to lowest sales
-  const sortedData = [...data].sort((a, b) => {
-    const salesA = Number(a["Approximate sales in millions"]) || 0;
-    const salesB = Number(b["Approximate sales in millions"]) || 0;
-    return salesB - salesA;
-  });
+  const sortedData = [...books].sort(
+    (a, b) => (Number(b.approximateSalesInMillions) || 0) - (Number(a.approximateSalesInMillions) || 0)
+  );
 
   // Calculate dynamic height to ensure bars stay readable (approx. 28px per item)
   const itemHeight = 28;
@@ -16,8 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
   chartContainer.style.height = `${calculatedHeight}px`;
 
   // Prepare labels (book titles) and data points (sales in millions)
-  const labels = sortedData.map((item) => item["Book"]);
-  const salesValues = sortedData.map((item) => Number(item["Approximate sales in millions"]) || 0);
+  const labels = sortedData.map((item) => item.book);
+  const salesValues = sortedData.map((item) => Number(item.approximateSalesInMillions"]) || 0);
 
   // Create horizontal bar chart with Chart.js
   new Chart(canvas, {
