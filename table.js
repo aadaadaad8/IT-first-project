@@ -21,12 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const row = document.createElement("tr");
 
       row.innerHTML = `
-        <td><strong>${book["Book"] ?? ""}</strong></td>
-        <td>${book["Author(s)"] ?? ""}</td>
-        <td>${book["Original language"] ?? ""}</td>
-        <td>${book["First published"] ?? ""}</td>
-        <td>${book["Approximate sales in millions"] ?? ""}</td>
-        <td>${book["Genre"] ?? ""}</td>
+        <td><strong>${book.book ?? ""}</strong></td>
+        <td>${book.authors"] ?? ""}</td>
+        <td>${book.originalLanguage ?? ""}</td>
+        <td>${book.firstPublished ?? ""}</td>
+        <td>${book.approximateSalesInMillions ?? ""}</td>
+        <td>${book.genre ?? ""}</td>
       `;
 
       tableBody.appendChild(row);
@@ -44,14 +44,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Match query against any property of a book object
-    const filtered = data.filter((book) => {
-      return (
-        String(book["Book"] ?? "").toLowerCase().includes(query) ||
-        String(book["Author(s)"] ?? "").toLowerCase().includes(query) ||
-        String(book["Original language"] ?? "").toLowerCase().includes(query) ||
-        String(book["First published"] ?? "").toLowerCase().includes(query) ||
-        String(book["Approximate sales in millions"] ?? "").toLowerCase().includes(query) ||
-        String(book["Genre"] ?? "").toLowerCase().includes(query)
+    const filtered = book.filter((book) => 
+        String(book.book ?? "").toLowerCase().includes(query) ||
+        String(book.authors ?? "").toLowerCase().includes(query) ||
+        String(book.originalLanguage ?? "").toLowerCase().includes(query) ||
+        String(book.firstPublished ?? "").toLowerCase().includes(query) ||
+        String(book.approximateSalesInMillions ?? "").toLowerCase().includes(query) ||
+        String(book.genre ?? "").toLowerCase().includes(query)
       );
     });
 
@@ -59,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Initial render using the global "data" array
-  renderTable(data);
+  renderTable(books);
 
   // Listen for typing events in the search input
   searchInput.addEventListener("input", handleSearch);
