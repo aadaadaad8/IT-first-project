@@ -175,4 +175,4 @@ const books = [
   { book: "Bridget Jones's Diary", authors: "Helen Fielding", originalLanguage: "English", firstPublished: 1996, approximateSalesInMillions: 10, genre: "" }
 ];
 
-export default books;
+window.books = books;
