@@ -6,3 +6,6 @@ collabrators:
     amirali dorostkar(forth)
 dataset link:
 https://www.kaggle.com/datasets/drahulsingh/best-selling-books
+si
+link if it is published:
+    https://aadaadaad8.github.io/IT-first-project/
