@@ -5,21 +5,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Create a copy of the global data and sort from highest to lowest sales
   const sortedData = [...books].sort(
-    (a, b) => (Number(b.approximateSalesInMillions) || 0) - (Number(a.approximateSalesInMillions) || 0)
+    (a, b) =>
+      (Number(b.approximateSalesInMillions) || 0) -
+      (Number(a.approximateSalesInMillions) || 0)
   );
 
-  // Calculate dynamic height to ensure bars stay readable (approx. 28px per item)
+  // Calculate dynamic height
   const itemHeight = 28;
   const calculatedHeight = Math.max(400, sortedData.length * itemHeight);
-  chartContainer.style.height = `${calculatedHeight}px`;
 
-  // Prepare labels (book titles) and data points (sales in millions)
+  chartContainer.style.height = ${calculatedHeight}px;
+
+  // Prepare labels and data
   const labels = sortedData.map((item) => item.book);
-  const salesValues = sortedData.map((item) => Number(item.approximateSalesInMillions"]) || 0);
 
-  // Create horizontal bar chart with Chart.js
+  const salesValues = sortedData.map(
+    (item) => Number(item.approximateSalesInMillions) || 0
+  );
+
+  // Create horizontal bar chart
   new Chart(canvas, {
     type: "bar",
+
     data: {
       labels: labels,
       datasets: [
@@ -33,22 +40,26 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       ]
     },
+
     options: {
-      // indexAxis: 'y' turns the default vertical bar chart into a horizontal one
       indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
+
       plugins: {
         legend: {
           display: true,
           position: "top"
         },
+
         tooltip: {
           callbacks: {
-            label: (context) => ` ${context.parsed.x} million copies sold`
+            label: (context) =>
+              ${context.parsed.x} million copies sold
           }
         }
       },
+
       scales: {
         x: {
           beginAtZero: true,
@@ -57,9 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
             text: "Sales in Millions"
           }
         },
+
         y: {
           ticks: {
-            autoSkip: false // Keep all book titles visible along the Y-axis
+            autoSkip: false
           }
         }
       }
