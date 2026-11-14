@@ -8,11 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (books.length === 0) {
       const row = document.createElement("tr");
 
-      row.innerHTML = 
+      row.innerHTML = `
         <td colspan="6" class="empty-message">
           No matching books found.
         </td>
-      ;
+     ` ;
 
       tableBody.appendChild(row);
       return;
@@ -21,14 +21,14 @@ document.addEventListener("DOMContentLoaded", () => {
     books.forEach((book) => {
       const row = document.createElement("tr");
 
-      row.innerHTML = 
+      row.innerHTML = `
         <td><strong>${book.book ?? ""}</strong></td>
         <td>${book.authors ?? ""}</td>
         <td>${book.originalLanguage ?? ""}</td>
         <td>${book.firstPublished ?? ""}</td>
         <td>${book.approximateSalesInMillions ?? ""}</td>
         <td>${book.genre ?? ""}</td>
-      ;
+      `;
 
       tableBody.appendChild(row);
     });
