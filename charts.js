@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const itemHeight = 28;
   const calculatedHeight = Math.max(400, sortedData.length * itemHeight);
 
-  chartContainer.style.height = ${calculatedHeight}px;
+  chartContainer.style.height = ${calculatedHeight}px`;
 
   // Prepare labels and data
   const labels = sortedData.map((item) => item.book);
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tooltip: {
           callbacks: {
             label: (context) =>
-              ${context.parsed.x} million copies sold
+              `${context.parsed.x} million copies sold`
           }
         }
       },
