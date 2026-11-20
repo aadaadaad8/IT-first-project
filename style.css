@@ -113,13 +113,13 @@ tbody tr:hover {
 }
 
 /* Right-align numeric columns */
-td:nth-child(4),
-td:nth-child(5) {
+td:nth-child(5),
+td:nth-child(6) {
   text-align: right;
 }
 
-th:nth-child(4),
-th:nth-child(5) {
+th:nth-child(5),
+th:nth-child(6) {
   text-align: right;
 }
 
@@ -130,6 +130,57 @@ th:nth-child(5) {
   padding: 24px;
 }
 
+/* Chart container styling */
+.chart-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Book cover thumbnail */
+.book-cover {
+  width: 50px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 4px;
+  background-color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  display: block;
+}
+
+.book-cover.no-cover {
+  opacity: 0.4;
+}
+
+/* Author name hint */
+.author-hover {
+  cursor: pointer;
+  border-bottom: 1px dotted #718096;
+}
+
+/* Floating author photo (outside the scrolling table, so it never gets clipped) */
+.author-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  background: #fff;
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.author-tooltip img {
+  display: block;
+  width: 140px;
+  height: auto;
+  border-radius: 4px;
+}
+
+.tooltip-empty {
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #718096;
+}
 /* Chart container styling */
 .chart-container {
   position: relative;
