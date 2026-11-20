@@ -254,7 +254,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   searchInput.addEventListener("input", handleSearch);
 });
-  renderTable(books);
-
-  searchInput.addEventListener("input", handleSearch);
-});
