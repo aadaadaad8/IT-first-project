@@ -3,8 +3,50 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
 
   // ----- Added: image helpers (covers from Open Library, author photos from Wikipedia) -----
-  const coverCache = {};
   const authorCache = {};
+
+  // Cover URLs are remembered in the browser, so next visits are almost instant
+  const COVER_STORAGE_KEY = "bookCoverCache_v1";
+  let coverCache = {};
+  try {
+    coverCache = JSON.parse(localStorage.getItem(COVER_STORAGE_KEY)) || {};
+  } catch (err) {
+    coverCache = {};
+  }
+
+  function saveCoverCache() {
+    try {
+      localStorage.setItem(COVER_STORAGE_KEY, JSON.stringify(coverCache));
+    } catch (err) {
+      // Storage may be full or blocked; the page still works without it
+    }
+  }
+
+  // Run several requests at the same time, but not too many
+  const MAX_CONCURRENT = 6;
+  let activeRequests = 0;
+  const requestQueue = [];
+
+  function runNextRequest() {
+    while (activeRequests < MAX_CONCURRENT && requestQueue.length > 0) {
+      const job = requestQueue.shift();
+      activeRequests++;
+      job().finally(() => {
+        activeRequests--;
+        runNextRequest();
+      });
+    }
+  }
+
+  function enqueue(task) {
+    return new Promise((resolve) => {
+      requestQueue.push(() => task().then(resolve, () => resolve(null)));
+      runNextRequest();
+    });
+  }
+
+  // Avoid sending the same request twice
+  const pendingCovers = {};
 
   // Blank book cover (no text) used when a book has no cover image
   const NO_COVER_IMG =
@@ -40,29 +82,42 @@ document.addEventListener("DOMContentLoaded", () => {
     return String(authors ?? "").split(/,| and | & |;/)[0].trim();
   }
 
-  async function fetchCover(title, authors) {
+  function fetchCover(title, authors) {
     const key = title + "|" + authors;
-    if (key in coverCache) return coverCache[key];
+
+    // Already known (a string means a cover was found, "" means there is none)
+    if (key in coverCache) {
+      return Promise.resolve(coverCache[key] || null);
+    }
+    if (key in pendingCovers) return pendingCovers[key];
 
     // Remove text inside parentheses, e.g. (Le Petit Prince)
     const cleanTitle = String(title).replace(/\s*\(.*?\)\s*/g, " ").trim();
     const author = firstAuthor(authors);
 
-    try {
-      const url =
-        "https://openlibrary.org/search.json?limit=1&fields=cover_i" +
-        "&title=" + encodeURIComponent(cleanTitle) +
-        "&author=" + encodeURIComponent(author);
-      const res = await fetch(url);
-      const data = await res.json();
-      const id = data.docs && data.docs[0] && data.docs[0].cover_i;
-      coverCache[key] = id
-        ? "https://covers.openlibrary.org/b/id/" + id + "-M.jpg"
-        : null;
-    } catch (err) {
-      coverCache[key] = null;
-    }
-    return coverCache[key];
+    pendingCovers[key] = enqueue(async () => {
+      try {
+        const url =
+          "https://openlibrary.org/search.json?limit=1&fields=cover_i" +
+          "&title=" + encodeURIComponent(cleanTitle) +
+          "&author=" + encodeURIComponent(author);
+        const res = await fetch(url);
+        const data = await res.json();
+        const id = data.docs && data.docs[0] && data.docs[0].cover_i;
+        coverCache[key] = id
+          ? "https://covers.openlibrary.org/b/id/" + id + "-M.jpg"
+          : "";
+        saveCoverCache();
+        return coverCache[key] || null;
+      } catch (err) {
+        // Network error: do not remember it, so it can be tried again later
+        return null;
+      } finally {
+        delete pendingCovers[key];
+      }
+    });
+
+    return pendingCovers[key];
   }
 
   async function fetchAuthorPhoto(authors) {
@@ -108,6 +163,10 @@ document.addEventListener("DOMContentLoaded", () => {
         showPlaceholder(img);
       }
     });
+  }, {
+    // Start loading covers about 1500px before they scroll into view
+    root: document.querySelector(".table-container"),
+    rootMargin: "1500px 0px"
   });
 
   function positionTooltip(event) {
