@@ -147,8 +147,29 @@ th:nth-child(6) {
   display: block;
 }
 
-.book-cover.no-cover {
-  opacity: 0.4;
+/* Only real covers can be enlarged, so show a zoom cursor for them */
+.book-cover.has-cover {
+  cursor: zoom-in;
+}
+
+/* Enlarged book cover shown on hover (outside the scrolling table, so it never gets clipped) */
+.cover-preview {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  background: #fff;
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.cover-preview img {
+  display: block;
+  width: 208px;
+  max-height: 318px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 /* Author name hint */
@@ -180,9 +201,4 @@ th:nth-child(6) {
   padding: 10px 14px;
   font-size: 0.85rem;
   color: #718096;
-}
-/* Chart container styling */
-.chart-container {
-  position: relative;
-  width: 100%;
 }
