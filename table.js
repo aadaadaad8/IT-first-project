@@ -6,10 +6,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const coverCache = {};
   const authorCache = {};
 
+  // Blank book cover (no text) used when a book has no cover image
+  const NO_COVER_IMG =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="150" viewBox="0 0 100 150">' +
+        '<rect width="100" height="150" rx="6" fill="#a0aec0"/>' +
+        '<rect x="0" y="0" width="10" height="150" rx="3" fill="#718096"/>' +
+        '<circle cx="56" cy="75" r="18" fill="none" stroke="#e2e8f0" stroke-width="4"/>' +
+        "</svg>"
+    );
+
   // Floating element for the author photo (outside the table so it is never clipped)
   const tooltip = document.createElement("div");
   tooltip.className = "author-tooltip";
   document.body.appendChild(tooltip);
+
+  // Floating element for the enlarged book cover
+  const coverPreview = document.createElement("div");
+  coverPreview.className = "cover-preview";
+  document.body.appendChild(coverPreview);
 
   function escapeHtml(text) {
     return String(text ?? "")
@@ -66,6 +82,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return authorCache[name];
   }
 
+  // Show the blank cover and make sure it does not enlarge on hover
+  function showPlaceholder(img) {
+    img.onerror = null;
+    img.classList.remove("has-cover");
+    img.classList.add("no-cover");
+    img.alt = "No cover available";
+    img.src = NO_COVER_IMG;
+  }
+
   // Covers are loaded only when their row becomes visible
   const coverObserver = new IntersectionObserver((entries) => {
     entries.forEach(async (entry) => {
@@ -75,10 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const src = await fetchCover(img.dataset.title, img.dataset.authors);
       if (src) {
+        // If the image fails to load, fall back to the blank cover
+        img.onerror = () => showPlaceholder(img);
+        img.classList.add("has-cover");
         img.src = src;
       } else {
-        img.classList.add("no-cover");
-        img.alt = "No cover";
+        showPlaceholder(img);
       }
     });
   });
@@ -86,6 +113,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function positionTooltip(event) {
     tooltip.style.left = event.clientX + 16 + "px";
     tooltip.style.top = event.clientY + 16 + "px";
+  }
+
+  // Place the enlarged cover next to the small one, kept inside the screen
+  function positionCoverPreview(img) {
+    const rect = img.getBoundingClientRect();
+    const previewWidth = 220;
+    const previewHeight = 330;
+
+    let left = rect.right + 12;
+    if (left + previewWidth > window.innerWidth) {
+      left = rect.left - previewWidth - 12;
+    }
+
+    let top = rect.top + rect.height / 2 - previewHeight / 2;
+    top = Math.max(8, Math.min(top, window.innerHeight - previewHeight - 8));
+
+    coverPreview.style.left = left + "px";
+    coverPreview.style.top = top + "px";
   }
   // ----- End of added helpers -----
 
@@ -160,6 +205,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   // ----- End of added hover logic -----
 
+  // ----- Added: enlarge book cover on hover (only real covers, not the blank one) -----
+  tableBody.addEventListener("mouseover", (event) => {
+    const img = event.target.closest(".book-cover.has-cover");
+    if (!img) return;
+
+    // Use the large version of the same cover for a sharper preview
+    const largeSrc = img.src.replace("-M.jpg", "-L.jpg");
+    coverPreview.innerHTML = `<img src="${largeSrc}" alt="${escapeHtml(img.alt)}">`;
+    coverPreview.style.display = "block";
+    positionCoverPreview(img);
+  });
+
+  tableBody.addEventListener("mouseout", (event) => {
+    if (event.target.closest(".book-cover")) {
+      coverPreview.style.display = "none";
+    }
+  });
+
+  // Hide the preview if the table is scrolled while hovering
+  document.querySelector(".table-container").addEventListener("scroll", () => {
+    coverPreview.style.display = "none";
+    tooltip.style.display = "none";
+  });
+  // ----- End of added cover hover logic -----
+
   function handleSearch(event) {
     const query = event.target.value.trim().toLowerCase();
 
@@ -180,6 +250,10 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTable(filtered);
   }
 
+  renderTable(books);
+
+  searchInput.addEventListener("input", handleSearch);
+});
   renderTable(books);
 
   searchInput.addEventListener("input", handleSearch);
