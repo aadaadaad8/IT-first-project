@@ -3,7 +3,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
 
   // ----- Added: image helpers (covers from Open Library, author photos from Wikipedia) -----
-  const authorCache = {};
+  // Author photo URLs are remembered in the browser too
+  const AUTHOR_STORAGE_KEY = "authorPhotoCache_v1";
+  let authorCache = {};
+  try {
+    authorCache = JSON.parse(localStorage.getItem(AUTHOR_STORAGE_KEY)) || {};
+  } catch (err) {
+    authorCache = {};
+  }
+
+  function saveAuthorCache() {
+    try {
+      localStorage.setItem(AUTHOR_STORAGE_KEY, JSON.stringify(authorCache));
+    } catch (err) {
+      // Storage may be full or blocked; the page still works without it
+    }
+  }
+
+  // Download an image in the background so it is ready when it is needed
+  const preloadedImages = {};
+  function preloadImage(url) {
+    if (!url || preloadedImages[url]) return;
+    preloadedImages[url] = true;
+    const preload = new Image();
+    preload.src = url;
+  }
+
 
   // Cover URLs are remembered in the browser, so next visits are almost instant
   const COVER_STORAGE_KEY = "bookCoverCache_v1";
@@ -22,31 +47,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Run several requests at the same time, but not too many
-  const MAX_CONCURRENT = 6;
-  let activeRequests = 0;
-  const requestQueue = [];
+  // Run several requests at the same time, but not too many.
+  // "urgent" jobs (like a hover) jump to the front of the queue.
+  function createLimiter(maxConcurrent) {
+    let active = 0;
+    const queue = [];
 
-  function runNextRequest() {
-    while (activeRequests < MAX_CONCURRENT && requestQueue.length > 0) {
-      const job = requestQueue.shift();
-      activeRequests++;
-      job().finally(() => {
-        activeRequests--;
-        runNextRequest();
-      });
+    function next() {
+      while (active < maxConcurrent && queue.length > 0) {
+        const job = queue.shift();
+        active++;
+        job().finally(() => {
+          active--;
+          next();
+        });
+      }
     }
+
+    return function enqueue(task, urgent) {
+      return new Promise((resolve) => {
+        const job = () => task().then(resolve, () => resolve(null));
+        if (urgent) {
+          queue.unshift(job);
+        } else {
+          queue.push(job);
+        }
+        next();
+      });
+    };
   }
 
-  function enqueue(task) {
-    return new Promise((resolve) => {
-      requestQueue.push(() => task().then(resolve, () => resolve(null)));
-      runNextRequest();
-    });
-  }
+  const enqueueCover = createLimiter(6);
+  const enqueueAuthor = createLimiter(4);
 
   // Avoid sending the same request twice
   const pendingCovers = {};
+  const pendingAuthors = {};
 
   // Blank book cover (no text) used when a book has no cover image
   const NO_COVER_IMG =
@@ -94,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cleanTitle = String(title).replace(/\s*\(.*?\)\s*/g, " ").trim();
     const author = firstAuthor(authors);
 
-    pendingCovers[key] = enqueue(async () => {
+    pendingCovers[key] = enqueueCover(async () => {
       try {
         const url =
           "https://openlibrary.org/search.json?limit=1&fields=cover_i" +
@@ -119,21 +155,34 @@ document.addEventListener("DOMContentLoaded", () => {
     return pendingCovers[key];
   }
 
-  async function fetchAuthorPhoto(authors) {
+  function fetchAuthorPhoto(authors, urgent) {
     const name = firstAuthor(authors);
-    if (name in authorCache) return authorCache[name];
 
-    try {
-      const url =
-        "https://en.wikipedia.org/api/rest_v1/page/summary/" +
-        encodeURIComponent(name.replace(/ /g, "_"));
-      const res = await fetch(url);
-      const data = await res.json();
-      authorCache[name] = (data.thumbnail && data.thumbnail.source) || null;
-    } catch (err) {
-      authorCache[name] = null;
+    // Already known (a string means a photo was found, "" means there is none)
+    if (name in authorCache) {
+      return Promise.resolve(authorCache[name] || null);
     }
-    return authorCache[name];
+    if (name in pendingAuthors) return pendingAuthors[name];
+
+    pendingAuthors[name] = enqueueAuthor(async () => {
+      try {
+        const url =
+          "https://en.wikipedia.org/api/rest_v1/page/summary/" +
+          encodeURIComponent(name.replace(/ /g, "_"));
+        const res = await fetch(url);
+        const data = await res.json();
+        authorCache[name] = (data.thumbnail && data.thumbnail.source) || "";
+        saveAuthorCache();
+        return authorCache[name] || null;
+      } catch (err) {
+        // Network error: do not remember it, so it can be tried again later
+        return null;
+      } finally {
+        delete pendingAuthors[name];
+      }
+    }, urgent);
+
+    return pendingAuthors[name];
   }
 
   // Show the blank cover and make sure it does not enlarge on hover
@@ -151,6 +200,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!entry.isIntersecting) return;
       const img = entry.target;
       coverObserver.unobserve(img);
+
+      // Get the author's photo ready in the background for the hover
+      fetchAuthorPhoto(img.dataset.authors).then(preloadImage);
 
       const src = await fetchCover(img.dataset.title, img.dataset.authors);
       if (src) {
@@ -250,6 +302,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----- Added: show author photo on hover -----
   let hoveredAuthor = null;
 
+  function showAuthorTooltip(target, html) {
+    if (hoveredAuthor !== target) return;
+    tooltip.innerHTML = html;
+    tooltip.style.display = "block";
+    positionAuthorTooltip(target);
+  }
+
   tableBody.addEventListener("mouseover", async (event) => {
     const target = event.target.closest(".author-hover");
     if (!target) return;
@@ -257,17 +316,24 @@ document.addEventListener("DOMContentLoaded", () => {
     hoveredAuthor = target;
     const authors = target.dataset.author;
 
-    const photo = await fetchAuthorPhoto(authors);
+    const photo = await fetchAuthorPhoto(authors, true);
     // If the mouse already left (or moved to another author), do nothing
     if (hoveredAuthor !== target) return;
 
-    if (photo) {
-      tooltip.innerHTML = `<img src="${photo}" alt="${escapeHtml(authors)}">`;
-    } else {
-      tooltip.innerHTML = `<div class="tooltip-empty">No photo available</div>`;
+    if (!photo) {
+      showAuthorTooltip(target, `<div class="tooltip-empty">No photo available</div>`);
+      return;
     }
-    tooltip.style.display = "block";
-    positionAuthorTooltip(target);
+
+    // Show the photo only when it is fully loaded (instant if it was preloaded)
+    const probe = new Image();
+    probe.onload = () => {
+      showAuthorTooltip(target, `<img src="${photo}" alt="${escapeHtml(authors)}">`);
+    };
+    probe.onerror = () => {
+      showAuthorTooltip(target, `<div class="tooltip-empty">No photo available</div>`);
+    };
+    probe.src = photo;
   });
 
   tableBody.addEventListener("mouseout", (event) => {
@@ -283,11 +349,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const img = event.target.closest(".book-cover.has-cover");
     if (!img) return;
 
-    // Use the large version of the same cover for a sharper preview
-    const largeSrc = img.src.replace("-M.jpg", "-L.jpg");
-    coverPreview.innerHTML = `<img src="${largeSrc}" alt="${escapeHtml(img.alt)}">`;
+    // Show the already loaded cover instantly, then switch to the sharper large version
+    const mediumSrc = img.src;
+    const largeSrc = mediumSrc.replace("-M.jpg", "-L.jpg");
+
+    coverPreview.innerHTML = `<img src="${mediumSrc}" alt="${escapeHtml(img.alt)}">`;
     coverPreview.style.display = "block";
     positionCoverPreview(img);
+
+    if (largeSrc !== mediumSrc) {
+      const previewImg = coverPreview.querySelector("img");
+      const big = new Image();
+      big.onload = () => {
+        // Swap only if this preview is still the one on screen
+        if (coverPreview.contains(previewImg)) previewImg.src = largeSrc;
+      };
+      big.src = largeSrc;
+    }
   });
 
   tableBody.addEventListener("mouseout", (event) => {
