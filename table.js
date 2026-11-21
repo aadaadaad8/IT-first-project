@@ -55,7 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
       '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="150" viewBox="0 0 100 150">' +
         '<rect width="100" height="150" rx="6" fill="#a0aec0"/>' +
         '<rect x="0" y="0" width="10" height="150" rx="3" fill="#718096"/>' +
-        '<circle cx="56" cy="75" r="18" fill="none" stroke="#e2e8f0" stroke-width="4"/>' +
         "</svg>"
     );
 
@@ -169,9 +168,25 @@ document.addEventListener("DOMContentLoaded", () => {
     rootMargin: "1500px 0px"
   });
 
-  function positionTooltip(event) {
-    tooltip.style.left = event.clientX + 16 + "px";
-    tooltip.style.top = event.clientY + 16 + "px";
+  // Place the author photo under the author name (fixed, does not follow the mouse)
+  function positionAuthorTooltip(target) {
+    const rect = target.getBoundingClientRect();
+    const tipHeight = tooltip.offsetHeight || 190;
+    const tipWidth = tooltip.offsetWidth || 152;
+
+    let left = rect.left;
+    if (left + tipWidth > window.innerWidth - 8) {
+      left = window.innerWidth - tipWidth - 8;
+    }
+
+    // Show below the name; if there is no room, show above it
+    let top = rect.bottom + 8;
+    if (top + tipHeight > window.innerHeight - 8) {
+      top = rect.top - tipHeight - 8;
+    }
+
+    tooltip.style.left = Math.max(8, left) + "px";
+    tooltip.style.top = Math.max(8, top) + "px";
   }
 
   // Place the enlarged cover next to the small one, kept inside the screen
@@ -233,32 +248,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ----- Added: show author photo on hover -----
+  let hoveredAuthor = null;
+
   tableBody.addEventListener("mouseover", async (event) => {
     const target = event.target.closest(".author-hover");
     if (!target) return;
 
+    hoveredAuthor = target;
     const authors = target.dataset.author;
-    tooltip.innerHTML = "";
-    tooltip.style.display = "block";
-    positionTooltip(event);
 
     const photo = await fetchAuthorPhoto(authors);
-    // If the mouse already left, do nothing
-    if (tooltip.style.display === "none") return;
+    // If the mouse already left (or moved to another author), do nothing
+    if (hoveredAuthor !== target) return;
 
     if (photo) {
       tooltip.innerHTML = `<img src="${photo}" alt="${escapeHtml(authors)}">`;
     } else {
       tooltip.innerHTML = `<div class="tooltip-empty">No photo available</div>`;
     }
-  });
-
-  tableBody.addEventListener("mousemove", (event) => {
-    if (event.target.closest(".author-hover")) positionTooltip(event);
+    tooltip.style.display = "block";
+    positionAuthorTooltip(target);
   });
 
   tableBody.addEventListener("mouseout", (event) => {
     if (event.target.closest(".author-hover")) {
+      hoveredAuthor = null;
       tooltip.style.display = "none";
     }
   });
