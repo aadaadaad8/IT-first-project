@@ -15,6 +15,7 @@
   <script defer src="data.js"></script>
   <script defer src="table.js"></script>
   <script defer src="charts.js"></script>
+  <script defer src="assistant.js"></script>
 </head>
 <body>
   <div class="container">
@@ -31,6 +32,36 @@
         placeholder="Search by title, author, genre, language..." 
         aria-label="Search books"
       >
+    </section>
+
+    <!-- Book Assistant Section -->
+    <section class="card assistant-card">
+      <h2>Book Assistant</h2>
+      <p class="assistant-note">
+        Tell me what you like and I will pick books from the Book List below. /
+        علایقت رو بگو تا از بین کتاب‌های لیست پیشنهاد بدم.
+      </p>
+
+      <div id="assistantLog" class="assistant-log" aria-live="polite"></div>
+
+      <div id="assistantChips" class="assistant-chips">
+        <button type="button" class="assistant-chip" data-text="Fantasy adventure">Fantasy adventure</button>
+        <button type="button" class="assistant-chip" data-text="Mystery thriller">Mystery thriller</button>
+        <button type="button" class="assistant-chip" data-text="کتاب انگیزشی">کتاب انگیزشی</button>
+        <button type="button" class="assistant-chip" data-text="کتاب کودک">کتاب کودک</button>
+        <button type="button" class="assistant-chip" data-text="رمان تاریخی">رمان تاریخی</button>
+      </div>
+
+      <div class="assistant-input-row">
+        <input
+          type="text"
+          id="assistantInput"
+          class="assistant-input"
+          placeholder="e.g. fantasy, mystery, psychology... / مثلاً: فانتزی، روانشناسی..."
+          aria-label="Tell the assistant what kind of books you like"
+        >
+        <button type="button" id="assistantSend" class="assistant-send">Send</button>
+      </div>
     </section>
 
     <!-- Table Section -->
