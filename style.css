@@ -5,13 +5,24 @@
   padding: 0;
 }
 
-/* Page background, base fonts, and line height */
+/* Page base fonts and line height (the background image is set on body::before below) */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f4f6f8;
-  color: #333;
+  background-color: #1b1f24;
+  color: #1d1d1f;
   line-height: 1.6;
   padding: 24px 16px;
+}
+
+/* Bookshelf background image with a dark overlay, fixed behind the page */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(rgba(10, 14, 20, 0.45), rgba(10, 14, 20, 0.55)),
+    url("background.jpg") center / cover no-repeat;
 }
 
 /* Center and constrain maximum content width */
@@ -27,49 +38,63 @@ header {
 
 h1 {
   font-size: 2rem;
-  color: #1a202c;
+  color: #ffffff;
   margin-bottom: 6px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
 .subtitle {
-  color: #718096;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 1rem;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
-/* Search input field */
+/* Search input field (frosted glass pill) */
 .search-section {
   margin-bottom: 24px;
 }
 
 #searchInput {
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 22px;
   font-size: 1rem;
-  border: 1px solid #cbd5e0;
-  border-radius: 8px;
-  background-color: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  color: #1d1d1f;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+#searchInput::placeholder {
+  color: #5f6368;
 }
 
 #searchInput:focus {
   outline: none;
-  border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+  background-color: rgba(255, 255, 255, 0.78);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
-/* Card wrapper for content sections */
+/* Card wrapper for content sections (frosted glass panel) */
 .card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  padding: 24px;
   margin-bottom: 28px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
 }
 
 .card h2 {
   font-size: 1.25rem;
   margin-bottom: 16px;
-  color: #2d3748;
+  color: #1d1d1f;
 }
 
 /* Table styling with horizontal scroll for smaller screens */
@@ -77,8 +102,9 @@ h1 {
   overflow-x: auto;
   max-height: 500px;
   overflow-y: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.28);
 }
 
 table {
@@ -90,26 +116,32 @@ table {
 
 th, td {
   padding: 12px 14px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
 }
 
 /* Sticky header keeps columns visible during vertical scrolling */
 th {
-  background-color: #edf2f7;
-  color: #4a5568;
+  background-color: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: #3c3c43;
   font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-/* Zebra striping for table rows */
+/* Soft striping for table rows */
 tbody tr:nth-child(even) {
-  background-color: #f7fafc;
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+tbody tr {
+  transition: background-color 0.15s;
 }
 
 tbody tr:hover {
-  background-color: #edf2f7;
+  background-color: rgba(255, 255, 255, 0.6);
 }
 
 /* Right-align numeric columns */
@@ -126,7 +158,7 @@ th:nth-child(6) {
 /* Empty message styling */
 .empty-message {
   text-align: center;
-  color: #a0aec0;
+  color: #5f6368;
   padding: 24px;
 }
 
@@ -141,9 +173,9 @@ th:nth-child(6) {
   width: 50px;
   height: 75px;
   object-fit: cover;
-  border-radius: 4px;
-  background-color: #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   display: block;
 }
 
@@ -158,10 +190,13 @@ th:nth-child(6) {
   position: fixed;
   z-index: 1000;
   pointer-events: none;
-  background: #fff;
-  padding: 6px;
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  padding: 8px;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
 .cover-preview img {
@@ -169,13 +204,13 @@ th:nth-child(6) {
   width: 208px;
   max-height: 318px;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 12px;
 }
 
 /* Author name hint */
 .author-hover {
   cursor: pointer;
-  border-bottom: 1px dotted #718096;
+  border-bottom: 1px dotted #6b7280;
 }
 
 /* Floating author photo (outside the scrolling table, so it never gets clipped) */
@@ -184,10 +219,13 @@ th:nth-child(6) {
   position: fixed;
   z-index: 1000;
   pointer-events: none;
-  background: #fff;
-  padding: 6px;
-  border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  padding: 8px;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
 .author-tooltip img {
@@ -195,11 +233,11 @@ th:nth-child(6) {
   width: 140px;
   height: 180px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 12px;
 }
 
 .tooltip-empty {
   padding: 10px 14px;
   font-size: 0.85rem;
-  color: #718096;
+  color: #5f6368;
 }
