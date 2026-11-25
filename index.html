@@ -16,6 +16,7 @@
   <script defer src="table.js"></script>
   <script defer src="charts.js"></script>
   <script defer src="assistant.js"></script>
+  <script defer src="insights.js"></script>
 </head>
 <body>
   <div class="container">
@@ -95,6 +96,34 @@
         <canvas id="salesChart"></canvas>
       </div>
     </section>
+
+    <!-- Top 10 Section (follows the search box) -->
+    <section class="card">
+      <h2>Top 10 Best-Selling Books</h2>
+      <p class="chart-note" id="topBooksNote"></p>
+      <div class="chart-box chart-box-tall">
+        <canvas id="topBooksChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Decade and Language Sections -->
+    <div class="chart-grid">
+      <section class="card">
+        <h2>Sales by Decade of First Publication</h2>
+        <p class="chart-note" id="decadeNote"></p>
+        <div class="chart-box">
+          <canvas id="decadeChart"></canvas>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Sales by Original Language</h2>
+        <p class="chart-note">Languages beyond the top 8 are grouped as "Other".</p>
+        <div class="chart-box">
+          <canvas id="languageChart"></canvas>
+        </div>
+      </section>
+    </div>
   </div>
 </body>
 </html>

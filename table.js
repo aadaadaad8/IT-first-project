@@ -84,14 +84,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const pendingCovers = {};
   const pendingAuthors = {};
 
-  // Blank book cover (no text) used when a book has no cover image
+  // Book icon on a plain cover, used when a book has no cover image
   const NO_COVER_IMG =
     "data:image/svg+xml;utf8," +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="150" viewBox="0 0 100 150">' +
-        '<rect width="100" height="150" rx="6" fill="#a0aec0"/>' +
-        '<rect x="0" y="0" width="10" height="150" rx="3" fill="#718096"/>' +
-        "</svg>"
+        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0" stop-color="#3b7f86"/><stop offset="1" stop-color="#21474d"/>' +
+        "</linearGradient></defs>" +
+        '<rect width="100" height="150" rx="6" fill="url(#g)"/>' +
+        '<rect width="10" height="150" rx="3" fill="#183a3f"/>' +
+        '<g transform="translate(29 54)" fill="none" stroke="#f3e9d2" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M26 8 C20 3 10 2 2 4 V40 C10 38 20 39 26 44 C32 39 42 38 50 40 V4 C42 2 32 3 26 8 Z"/>' +
+          '<path d="M26 8 V44"/>' +
+        "</g>" +
+      "</svg>"
     );
 
   // Floating element for the author photo (outside the table so it is never clipped)
