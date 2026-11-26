@@ -112,7 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (matches.length === 0) {
         topBooksNote.textContent = "No matching books.";
       } else if (!query) {
-        topBooksNote.textContent = "The 10 best sellers out of " + books.length + " books. Use the search box to see the top books of a genre, author or language.";
+        topBooksNote.textContent = "The 10 best sellers out of " + books.length + " books." +
+          (searchInput ? " Use the search box to see the top books of a genre, author or language." : "");
       } else {
         topBooksNote.textContent = "Top " + currentTop.length + " among the " + matches.length + " books matching \"" + searchInput.value.trim() + "\".";
       }

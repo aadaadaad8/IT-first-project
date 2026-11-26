@@ -352,9 +352,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return bubble;
   }
 
+  // Title without the text in parentheses, used as the search text in the table
+  function searchText(book) {
+    return String(book.book).replace(/\s*\(.*?\)\s*/g, " ").trim();
+  }
+
+  // Only used on a page that has its own search box and table
   function showInTable(book) {
     if (!searchInput) return;
-    searchInput.value = String(book.book).replace(/\s*\(.*?\)\s*/g, " ").trim();
+    searchInput.value = searchText(book);
     searchInput.dispatchEvent(new Event("input", { bubbles: true }));
     const table = document.getElementById("booksTable");
     if (table) table.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -389,11 +395,18 @@ document.addEventListener("DOMContentLoaded", () => {
           : "Matches: " + uniqueReasons.join(", ");
       }
 
-      const button = document.createElement("button");
-      button.type = "button";
+      let button;
+      if (searchInput) {
+        button = document.createElement("button");
+        button.type = "button";
+        button.addEventListener("click", () => showInTable(book));
+      } else {
+        // No table on this page: open the Book List page with the title already searched
+        button = document.createElement("a");
+        button.href = "books.html?search=" + encodeURIComponent(searchText(book));
+      }
       button.className = "rec-button";
       button.textContent = persian ? "نمایش در جدول" : "Show in table";
-      button.addEventListener("click", () => showInTable(book));
 
       card.append(title, meta, why, button);
       log.appendChild(card);

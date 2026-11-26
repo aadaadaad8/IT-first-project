@@ -428,3 +428,48 @@ th:nth-child(6) {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Top menu ---------- */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.site-nav a {
+  padding: 8px 22px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  transition: background-color 0.15s;
+}
+
+.site-nav a:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.site-nav a[aria-current="page"] {
+  color: #1d1d1f;
+  text-shadow: none;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+/* ---------- Book List page: use the available height for the table ---------- */
+.books-page .table-container {
+  max-height: calc(100vh - 330px);
+  min-height: 420px;
+}
+
+/* Link version of the "Show in table" button (used on the home page) */
+a.rec-button {
+  display: inline-block;
+  text-decoration: none;
+}

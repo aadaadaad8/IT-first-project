@@ -408,7 +408,15 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTable(filtered);
   }
 
-  renderTable(books);
+  // A link like books.html?search=The%20Hobbit opens the table already filtered
+  const initialSearch = new URLSearchParams(window.location.search).get("search");
+
+  if (initialSearch) {
+    searchInput.value = initialSearch;
+    handleSearch({ target: searchInput });
+  } else {
+    renderTable(books);
+  }
 
   searchInput.addEventListener("input", handleSearch);
 });
