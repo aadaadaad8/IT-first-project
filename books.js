@@ -211,12 +211,12 @@ document.addEventListener("DOMContentLoaded", () => {
     img.src = NO_COVER_IMG;
   }
 
-  // Covers are loaded only when their row becomes visible
-  const coverObserver = new IntersectionObserver((entries) => {
+  // Covers are loaded shortly before they come into view
+  function onCoverVisible(entries, observer) {
     entries.forEach(async (entry) => {
       if (!entry.isIntersecting) return;
       const img = entry.target;
-      coverObserver.unobserve(img);
+      observer.unobserve(img);
 
       // Get the author's photo ready in the background for the hover
       fetchAuthorPhoto(img.dataset.authors).then(preloadImage);
@@ -231,10 +231,22 @@ document.addEventListener("DOMContentLoaded", () => {
         showPlaceholder(img);
       }
     });
-  }, {
-    // Start loading covers about 1500px before they scroll into view
+  }
+
+  // Row (carousel) view: the row scrolls sideways, so it is the "root" of the observer
+  const rowObserver = new IntersectionObserver(onCoverVisible, {
+    root: grid,
+    rootMargin: "0px 1500px"
+  });
+
+  // Grid view: the whole page scrolls up and down
+  const pageObserver = new IntersectionObserver(onCoverVisible, {
     rootMargin: "1500px 0px"
   });
+
+  function observeCover(img) {
+    (document.body.classList.contains("view-grid") ? pageObserver : rowObserver).observe(img);
+  }
 
   // Place the author photo under the author name (fixed, does not follow the mouse)
   function positionAuthorTooltip(target) {
@@ -278,6 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderBooks(list) {
     grid.innerHTML = "";
+    grid.scrollLeft = 0;
 
     if (list.length === 0) {
       const empty = document.createElement("p");
@@ -313,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       grid.appendChild(card);
-      coverObserver.observe(card.querySelector(".book-cover"));
+      observeCover(card.querySelector(".book-cover"));
     });
   }
 
@@ -393,6 +406,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Hide the floating photos if the page is scrolled while hovering
+  function hideFloating() {
+    coverPreview.style.display = "none";
+    tooltip.style.display = "none";
+  }
+  grid.addEventListener("scroll", hideFloating);
   window.addEventListener("scroll", () => {
     coverPreview.style.display = "none";
     tooltip.style.display = "none";
@@ -429,10 +447,41 @@ document.addEventListener("DOMContentLoaded", () => {
   applySearch();
   searchInput.addEventListener("input", applySearch);
 
-  // Grid view <-> list view
+  // Row view (default, like the design) <-> grid view with all the books
   viewToggle.addEventListener("click", () => {
-    const isList = document.body.classList.toggle("view-list");
-    viewToggle.setAttribute("aria-pressed", String(isList));
+    const isGrid = document.body.classList.toggle("view-grid");
+    viewToggle.setAttribute("aria-pressed", String(isGrid));
+    applySearch();
+  });
+
+  // Arrow buttons for the row
+  const prevButton = document.getElementById("prevButton");
+  const nextButton = document.getElementById("nextButton");
+  function scrollRow(direction) {
+    grid.scrollBy({ left: direction * Math.max(300, grid.clientWidth * 0.8), behavior: "smooth" });
+  }
+  if (prevButton) prevButton.addEventListener("click", () => scrollRow(-1));
+  if (nextButton) nextButton.addEventListener("click", () => scrollRow(1));
+
+  // Drag the row with the mouse (touch screens already scroll with a swipe)
+  let drag = null;
+  grid.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    if (document.body.classList.contains("view-grid")) return;
+    drag = { x: event.clientX, left: grid.scrollLeft, moved: false };
+  });
+  window.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x;
+    if (Math.abs(dx) > 4) {
+      drag.moved = true;
+      grid.classList.add("dragging");
+    }
+    if (drag.moved) grid.scrollLeft = drag.left - dx;
+  });
+  window.addEventListener("pointerup", () => {
+    drag = null;
+    grid.classList.remove("dragging");
   });
 
   // Side menu: hidden by default on small screens

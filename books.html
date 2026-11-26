@@ -61,14 +61,16 @@
       </label>
     </header>
 
-    <!-- Books -->
+    <!-- Books: one row of cards on a soft beige panel, like the design -->
     <main class="panel">
+      <div class="panel-bg" aria-hidden="true"></div>
+
       <div class="panel-head">
         <div>
           <h2 id="resultsTitle">Most Popular Picks</h2>
           <p id="resultsCount" class="results-count"></p>
         </div>
-        <button type="button" id="viewToggle" class="view-toggle" aria-pressed="false" aria-label="Switch between grid view and list view" title="Grid / list view">
+        <button type="button" id="viewToggle" class="view-toggle" aria-pressed="false" aria-label="Switch between the row view and the grid view with all books" title="Row / grid view">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <path d="M9 6h11M9 12h11M9 18h11"/>
             <circle cx="4.5" cy="6" r="1" fill="currentColor"/>
@@ -80,6 +82,16 @@
 
       <!-- Book cards will be inserted here by books.js -->
       <div id="bookGrid" class="book-grid"></div>
+
+      <!-- Arrows for the row (hidden in the grid view) -->
+      <div class="carousel-nav">
+        <button type="button" id="prevButton" class="nav-button" aria-label="Previous books">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <button type="button" id="nextButton" class="nav-button" aria-label="Next books">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
     </main>
   </div>
 </body>
