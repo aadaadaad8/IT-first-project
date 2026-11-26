@@ -307,10 +307,14 @@ document.addEventListener("DOMContentLoaded", () => {
       card.className = "book-card";
 
       card.innerHTML = `
-        <img class="book-cover"
-             alt="${escapeHtml(book.book)}"
-             data-title="${escapeHtml(book.book)}"
-             data-authors="${escapeHtml(book.authors)}">
+        <a class="cover-link" draggable="false"
+           href="detail.html?title=${encodeURIComponent(String(book.book).trim())}"
+           aria-label="Open the details of ${escapeHtml(book.book)}">
+          <img class="book-cover" draggable="false"
+               alt="${escapeHtml(book.book)}"
+               data-title="${escapeHtml(book.book)}"
+               data-authors="${escapeHtml(book.authors)}">
+        </a>
         <div class="book-info">
           <h3 class="book-title">${escapeHtml(book.book)}</h3>
           <div class="book-author">
@@ -465,6 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Drag the row with the mouse (touch screens already scroll with a swipe)
   let drag = null;
+  let suppressClick = false;
   grid.addEventListener("pointerdown", (event) => {
     if (event.pointerType !== "mouse" || event.button !== 0) return;
     if (document.body.classList.contains("view-grid")) return;
@@ -480,9 +485,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (drag.moved) grid.scrollLeft = drag.left - dx;
   });
   window.addEventListener("pointerup", () => {
+    // After a drag the browser still sends a click: ignore that one click
+    if (drag && drag.moved) {
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 0);
+    }
     drag = null;
     grid.classList.remove("dragging");
   });
+  grid.addEventListener("click", (event) => {
+    if (suppressClick) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, true);
 
   // Side menu: hidden by default on small screens
   if (window.innerWidth < 900) document.body.classList.add("rail-hidden");
