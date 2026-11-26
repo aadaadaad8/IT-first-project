@@ -1,0 +1,412 @@
+/* ---------- Book List page: light, minimal "bookstore" look ---------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --ink: #3a3a3a;
+  --muted: #8a8a8a;
+  --line: #d6d6d6;
+  --paper: #fcfcfc;
+  --panel: #f8eee4;
+  --accent: #f5a623;
+  --blue: #2b8aa5;
+  --rail-width: 96px;
+}
+
+body {
+  font-family: "Nunito Sans", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ----- Menu button and side menu ----- */
+.menu-button {
+  position: fixed;
+  top: 40px;
+  left: 36px;
+  z-index: 30;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.menu-button:hover {
+  background: #f0ebe5;
+}
+
+.menu-button svg {
+  width: 26px;
+  height: 26px;
+}
+
+.side-rail {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: var(--rail-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 220px 0 40px;
+  background: var(--paper);
+  transition: transform 0.25s ease;
+}
+
+.rail-top {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.rail-link {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  color: #4a4a4a;
+  border-radius: 12px;
+  transition: background-color 0.15s;
+}
+
+.rail-link:hover {
+  background: #f0ebe5;
+}
+
+.rail-link[aria-current="page"] {
+  color: var(--blue);
+  background: #e8f3f6;
+}
+
+.rail-link svg {
+  width: 24px;
+  height: 24px;
+}
+
+.rail-hidden .side-rail {
+  transform: translateX(-100%);
+}
+
+/* ----- Page ----- */
+.page {
+  margin-left: var(--rail-width);
+  padding: 0 64px 72px 28px;
+  transition: margin-left 0.25s ease;
+}
+
+.rail-hidden .page {
+  margin-left: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 40px 0 0 56px;
+  min-height: 80px;
+}
+
+.topbar h1 {
+  font-family: "Roboto Slab", Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 1.4rem;
+  color: #3a3a3a;
+}
+
+/* Search with an underline, like the design */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 360px);
+  padding: 6px 4px;
+  color: #666;
+  border-bottom: 2px solid var(--line);
+  transition: border-color 0.2s;
+}
+
+.search:focus-within {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.search svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.search input::placeholder {
+  color: #aaa;
+}
+
+/* ----- Soft beige panel with the books ----- */
+.panel {
+  margin-top: 56px;
+  padding: 32px 44px 56px;
+  background: var(--panel);
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.panel-head h2 {
+  font-family: "Roboto Slab", Georgia, "Times New Roman", serif;
+  font-weight: 300;
+  font-size: 3rem;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: #444;
+}
+
+.results-count {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.view-toggle {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #555;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.view-toggle:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.view-toggle[aria-pressed="true"] {
+  color: var(--blue);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.view-toggle svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ----- Book cards ----- */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 48px 44px;
+  margin-top: 40px;
+}
+
+.book-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 26px;
+  min-width: 0;
+}
+
+.book-cover {
+  flex: none;
+  width: 128px;
+  height: 192px;
+  object-fit: cover;
+  background-color: #eadfd2;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  display: block;
+}
+
+/* Only real covers can be enlarged, so show a zoom cursor for them */
+.book-cover.has-cover {
+  cursor: zoom-in;
+}
+
+.book-info {
+  min-width: 0;
+  padding-top: 6px;
+}
+
+.book-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #3d3d3d;
+  overflow-wrap: anywhere;
+}
+
+.book-author {
+  margin-top: 4px;
+  font-size: 0.92rem;
+  color: #777;
+  overflow-wrap: anywhere;
+}
+
+/* Author name hint (the photo shows on hover) */
+.author-hover {
+  cursor: pointer;
+  border-bottom: 1px dotted #aaa;
+}
+
+/* Sales: a thin bar, like the rating stars in the design */
+.sales {
+  margin-top: 14px;
+}
+
+.sales-bar {
+  width: 120px;
+  max-width: 100%;
+  height: 5px;
+  background: #e6dacb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sales-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+.sales-text {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.book-meta {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.book-genre {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 1px 12px;
+  font-size: 0.76rem;
+  color: #7a6a58;
+  border: 1px solid #d9ccbb;
+  border-radius: 999px;
+}
+
+.empty-message {
+  grid-column: 1 / -1;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ----- List view (the toggle button in the top right of the panel) ----- */
+.view-list .book-grid {
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.view-list .book-cover {
+  width: 72px;
+  height: 108px;
+}
+
+.view-list .book-card {
+  gap: 20px;
+}
+
+.view-list .sales {
+  margin-top: 8px;
+}
+
+/* ----- Enlarged cover and author photo (shown on hover) ----- */
+.cover-preview,
+.author-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  padding: 6px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.cover-preview img {
+  display: block;
+  width: 208px;
+  max-height: 318px;
+  object-fit: contain;
+}
+
+.author-tooltip img {
+  display: block;
+  width: 140px;
+  height: 180px;
+  object-fit: cover;
+}
+
+.tooltip-empty {
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ----- Small screens ----- */
+@media (max-width: 900px) {
+  .page {
+    margin-left: 0;
+    padding: 0 20px 48px;
+  }
+
+  .side-rail {
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.12);
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    padding: 36px 0 0 52px;
+  }
+
+  .panel {
+    margin-top: 32px;
+    padding: 24px 20px 40px;
+  }
+
+  .panel-head h2 {
+    font-size: 2.1rem;
+  }
+
+  .book-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
