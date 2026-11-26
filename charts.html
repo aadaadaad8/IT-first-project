@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Insights - Bestselling Books</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Roboto+Slab:wght@300;400&display=swap">
+
+  <link rel="stylesheet" href="charts-page.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="data.js"></script>
+  <script defer src="insights.js"></script>
+</head>
+<body>
+  <button type="button" id="menuButton" class="menu-button" aria-label="Show or hide the side menu" aria-controls="sideRail">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
+
+  <nav id="sideRail" class="side-rail" aria-label="Main">
+    <div class="rail-top">
+      <a class="rail-link" href="index.html" title="Book List" aria-label="Book List">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+          <path d="M9 3v18M13 8h3"/>
+        </svg>
+      </a>
+
+      <a class="rail-link" href="charts.html" aria-current="page" title="Sales Charts" aria-label="Sales Charts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9M13 17V5M8 17v-3"/>
+        </svg>
+      </a>
+
+      <a class="rail-link" href="assistant.html" title="Book Assistant" aria-label="Book Assistant">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <path d="M8 9h8M8 13h5"/>
+        </svg>
+      </a>
+
+      <a class="rail-link" href="index.html?saved=1" title="Saved Books" aria-label="Saved Books">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 3h12v18l-6-4-6 4z"/>
+        </svg>
+      </a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <header class="topbar">
+      <h1><a href="index.html" class="brand-link">Bestselling Books</a></h1>
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M20 20l-3.5-3.5"/>
+        </svg>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Filter Top 10 by title, author, genre, language..."
+          aria-label="Filter charts"
+        >
+      </label>
+    </header>
+
+    <main class="content">
+      <section class="hero-band">
+        <div class="hero-band-bg" aria-hidden="true"></div>
+        <div class="hero-band-inner">
+          <h2>Sales Insights</h2>
+          <p>Explore top-selling titles, publication decades, and original language distributions across the dataset.</p>
+        </div>
+      </section>
+
+      <div class="charts-stack">
+        <section class="chart-card">
+          <h3>Top 10 Best-Selling Books</h3>
+          <p class="chart-note" id="topBooksNote"></p>
+          <div class="chart-box chart-box-tall">
+            <canvas id="topBooksChart"></canvas>
+          </div>
+        </section>
+
+        <div class="chart-grid">
+          <section class="chart-card">
+            <h3>Sales by Decade of First Publication</h3>
+            <p class="chart-note" id="decadeNote"></p>
+            <div class="chart-box">
+              <canvas id="decadeChart"></canvas>
+            </div>
+          </section>
+
+          <section class="chart-card">
+            <h3>Sales by Original Language</h3>
+            <p class="chart-note">Languages beyond the top 8 are grouped as "Other".</p>
+            <div class="chart-box">
+              <canvas id="languageChart"></canvas>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -2,97 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bestselling Books - Book List</title>
-
-  <!-- Fonts (the page still works with the fallback fonts if they cannot load) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Roboto+Slab:wght@300;400&display=swap">
-
-  <!-- This page has its own stylesheet -->
-  <link rel="stylesheet" href="books.css">
-
-  <!-- Load dataset and page logic in order -->
-  <script defer src="data.js"></script>
-  <script defer src="books.js"></script>
+  <title>Redirecting to Bestselling Books...</title>
+  <script>
+    window.location.replace("index.html" + window.location.search);
+  </script>
 </head>
 <body>
-  <!-- Menu button: shows or hides the side menu -->
-  <button type="button" id="menuButton" class="menu-button" aria-label="Show or hide the side menu" aria-controls="sideRail">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <path d="M4 6h16M4 12h16M4 18h16"/>
-    </svg>
-  </button>
-
-  <!-- Side menu -->
-  <nav id="sideRail" class="side-rail" aria-label="Main">
-    <div class="rail-top">
-      <a class="rail-link" href="books.html" aria-current="page" title="Book List" aria-label="Book List">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
-          <path d="M9 3v18M13 8h3"/>
-        </svg>
-      </a>
-    </div>
-    <a class="rail-link" href="index.html" title="Home" aria-label="Home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 11l9-8 9 8"/>
-        <path d="M5 10v10h14V10M10 20v-6h4v6"/>
-      </svg>
-    </a>
-  </nav>
-
-  <div class="page">
-    <!-- Top bar: title and search -->
-    <header class="topbar">
-      <h1>Bestselling Books</h1>
-      <label class="search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"/>
-          <path d="M20 20l-3.5-3.5"/>
-        </svg>
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search by title, author, genre, language..."
-          aria-label="Search books"
-        >
-      </label>
-    </header>
-
-    <!-- Books: one row of cards on a soft beige panel, like the design -->
-    <main class="panel">
-      <div class="panel-bg" aria-hidden="true"></div>
-
-      <div class="panel-head">
-        <div>
-          <h2 id="resultsTitle">Most Popular Picks</h2>
-          <p id="resultsCount" class="results-count"></p>
-        </div>
-        <button type="button" id="viewToggle" class="view-toggle" aria-pressed="false" aria-label="Switch between the row view and the grid view with all books" title="Row / grid view">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <path d="M9 6h11M9 12h11M9 18h11"/>
-            <circle cx="4.5" cy="6" r="1" fill="currentColor"/>
-            <circle cx="4.5" cy="12" r="1" fill="currentColor"/>
-            <circle cx="4.5" cy="18" r="1" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Book cards will be inserted here by books.js -->
-      <div id="bookGrid" class="book-grid"></div>
-
-      <!-- Arrows for the row (hidden in the grid view) -->
-      <div class="carousel-nav">
-        <button type="button" id="prevButton" class="nav-button" aria-label="Previous books">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
-        </button>
-        <button type="button" id="nextButton" class="nav-button" aria-label="Next books">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-    </main>
-  </div>
+  <p>Moved to <a href="index.html">Bestselling Books</a>.</p>
 </body>
 </html>

@@ -1,17 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const menuButton = document.getElementById("menuButton");
+  if (window.innerWidth < 900) document.body.classList.add("rail-hidden");
+  if (menuButton) {
+    menuButton.addEventListener("click", () => {
+      document.body.classList.toggle("rail-hidden");
+    });
+  }
+
   const log = document.getElementById("assistantLog");
   const input = document.getElementById("assistantInput");
   const sendButton = document.getElementById("assistantSend");
   const chipsBox = document.getElementById("assistantChips");
-  const searchInput = document.getElementById("searchInput");
 
   if (!log || !input || !sendButton || typeof books === "undefined") return;
 
-  // ---------------------------------------------------------------------------
-  // Extra topic tags for books whose "genre" is empty in data.js.
-  // They are only used by this assistant (data.js is not changed).
-  // Each row: [field to search in, text to find, tags]
-  // ---------------------------------------------------------------------------
   const EXTRA_TAGS = [
     ["book", "Bermuda Triangle", "paranormal, mystery, non-fiction"],
     ["book", "Horse Whisperer", "romance, novel"],
@@ -71,10 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ["book", "Bridget Jones", "romance, humor, comedy, novel"]
   ];
 
-  // ---------------------------------------------------------------------------
-  // Topics the assistant understands (Persian + English words)
-  // field: "meta" = genre + tags, "lang" = original language, "year" = custom test
-  // ---------------------------------------------------------------------------
   const CONCEPTS = [
     { id: "fantasy", w: 3, labelFa: "فانتزی", labelEn: "fantasy", re: /fantasy/,
       fa: ["فانتزی", "جادو", "جادویی", "افسانه", "افسانه ای"], en: ["fantasy", "magic", "wizard", "wizards"] },
@@ -85,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     { id: "romance", w: 3, labelFa: "عاشقانه", labelEn: "romance", re: /romanc/,
       fa: ["عاشقانه", "عشق", "رمانتیک", "عاشقی"], en: ["romance", "romantic"] },
     { id: "scifi", w: 3, labelFa: "علمی تخیلی", labelEn: "science fiction", re: /science fiction|science fantasy|sci-?fi/,
-      fa: ["علمی تخیلی", "علمی تخیلی", "تخیلی", "فضایی"], en: ["science fiction", "sci-fi", "scifi", "sci fi"] },
+      fa: ["علمی تخیلی", "تخیلی", "فضایی"], en: ["science fiction", "sci-fi", "scifi", "sci fi"] },
     { id: "dystopia", w: 3, labelFa: "ضدآرمان‌شهری (دیستوپیا)", labelEn: "dystopia", re: /dystopi/,
       fa: ["دیستوپیا", "دیستوپیایی", "ضد آرمانشهر", "ضد آرمان شهر", "آخرالزمانی"], en: ["dystopia", "dystopian"] },
     { id: "historical", w: 3, labelFa: "تاریخی", labelEn: "historical", re: /histor/,
@@ -127,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
     { id: "relationships", w: 3, labelFa: "روابط", labelEn: "relationships", re: /relationship|marriage/,
       fa: ["رابطه", "روابط", "زناشویی", "ازدواج"], en: ["relationship", "relationships", "marriage"] },
     { id: "magicrealism", w: 3, labelFa: "رئالیسم جادویی", labelEn: "magic realism", re: /magic realism/,
-      fa: ["رئالیسم جادویی", "رئالیسم جادویی"], en: ["magic realism", "magical realism"] },
+      fa: ["رئالیسم جادویی"], en: ["magic realism", "magical realism"] },
     { id: "novel", w: 1, guards: { fiction: /science fiction|science fantasy|non fiction|non-fiction|nonfiction/ }, labelFa: "رمان", labelEn: "novel", re: /novel|fiction|novella/,
       fa: ["رمان", "داستان", "داستانی"], en: ["novel", "novels", "fiction", "story", "stories"] },
     { id: "nonfiction", w: 1, labelFa: "غیرداستانی", labelEn: "non-fiction", re: /non-fiction|memoir|autobiograph|biograph|popular science|psycholog|self-help|guide|manual|anthropolog|economy|economics|diet|essay|social science(?! fiction)|history/,
@@ -136,8 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
       fa: ["کلاسیک", "قدیمی", "قدیم"], en: ["classic", "classics", "old", "vintage"] },
     { id: "modern", w: 1.5, labelFa: "جدید و معاصر", labelEn: "modern", test: (e) => e.book.firstPublished >= 1990,
       fa: ["جدید", "مدرن", "امروزی", "معاصر", "تازه"], en: ["modern", "contemporary", "recent", "newer"] },
-
-    // Languages (matched against the original language of the book)
     { id: "l-french", w: 2.5, labelFa: "زبان فرانسوی", labelEn: "French", field: "lang", re: /french/, fa: ["فرانسوی", "فرانسه"], en: ["french", "france"] },
     { id: "l-german", w: 2.5, labelFa: "زبان آلمانی", labelEn: "German", field: "lang", re: /german/, fa: ["آلمانی", "آلمان"], en: ["german", "germany"] },
     { id: "l-russian", w: 2.5, labelFa: "زبان روسی", labelEn: "Russian", field: "lang", re: /russian/, fa: ["روسی", "روسیه"], en: ["russian", "russia"] },
@@ -150,7 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
     { id: "l-norwegian", w: 2.5, labelFa: "زبان نروژی", labelEn: "Norwegian", field: "lang", re: /norwegian/, fa: ["نروژی", "نروژ"], en: ["norwegian", "norway"] }
   ];
 
-  // Famous names written in Persian -> the English words used in data.js
   const NAMES_FA = {
     "تالکین": "tolkien", "هابیت": "hobbit", "هری پاتر": "harry potter", "رولینگ": "rowling",
     "آگاتا کریستی": "christie", "کریستی": "christie", "کوئیلو": "coelho", "پائولو کوئیلو": "coelho",
@@ -160,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "هاوکینگ": "hawking", "کارل سیگان": "sagan", "سیگان": "sagan", "شازده کوچولو": "little prince",
     "جین آستن": "austen", "فیتزجرالد": "fitzgerald", "گتسبی": "gatsby", "ناباکوف": "nabokov",
     "نابوکوف": "nabokov", "دنیای سوفی": "sophie", "اورول": "orwell", "جرج اورول": "orwell",
-    "بردبری": "bradbury", "دن براون": "dan brown", "مارک تواین": "twain", "رومن": "roald dahl",
+    "بردبری": "bradbury", "دن براون": "dan brown", "مارک تواین": "twain",
     "رولد دال": "roald dahl", "دکتر سوس": "seuss", "جبران": "gibran", "پیامبر": "prophet",
     "فرانکل": "frankl", "رمارک": "remarque", "فرانک هربرت": "herbert", "تلماسه": "dune"
   };
@@ -172,9 +167,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const FA_SUFFIXES = ["", "ها", "های", "ی", "ای", "ان", "انه", "ه", "یی", "ات", "تر", "رو", "را", "هام", "مو"];
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
   function normalize(text) {
     return String(text ?? "")
       .toLowerCase()
@@ -196,29 +188,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  // Does the (normalized) user text contain this keyword?
   function hasKeyword(normalized, tokens, keyword, persian) {
     const kw = normalize(keyword);
     if (!kw) return false;
-
     if (kw.includes(" ")) {
       return (" " + normalized + " ").includes(" " + kw + " ");
     }
-
     if (persian) {
-      return tokens.some((tok) => {
-        if (!tok.startsWith(kw)) return false;
-        return FA_SUFFIXES.includes(tok.slice(kw.length));
-      });
+      return tokens.some((tok) => tok.startsWith(kw) && FA_SUFFIXES.includes(tok.slice(kw.length)));
     }
-
-    // English: allow simple plurals / endings (fantasy -> fantasies is not needed, books -> book)
     return tokens.some((tok) => tok === kw || (kw.length >= 4 && tok.startsWith(kw) && tok.length - kw.length <= 2));
   }
 
-  // ---------------------------------------------------------------------------
-  // Prepare books
-  // ---------------------------------------------------------------------------
   const entries = books.map((book) => {
     const title = String(book.book ?? "");
     const authors = String(book.authors ?? "");
@@ -234,8 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
       book,
       meta: (String(book.genre ?? "") + " " + tags).toLowerCase(),
       text: (title + " " + authors).toLowerCase(),
-      lang: String(book.originalLanguage ?? "").toLowerCase(),
-      tags
+      lang: String(book.originalLanguage ?? "").toLowerCase()
     };
   });
 
@@ -248,25 +228,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return concept.re.test(concept.field === "lang" ? entry.lang : entry.meta);
   }
 
-  // ---------------------------------------------------------------------------
-  // Understanding the message and scoring books
-  // ---------------------------------------------------------------------------
   function analyze(message) {
     const persian = isPersian(message);
     const normalized = normalize(message);
     const tokens = normalized.split(" ").filter(Boolean);
 
-    // Topics found in the message
     const concepts = CONCEPTS.filter((concept) => {
       const words = persian ? concept.fa.concat(concept.en) : concept.en;
       return words.some((word) => {
-        // Some words mean something else inside a longer phrase (e.g. "science" in "science fiction")
         if (concept.guards && concept.guards[word] && concept.guards[word].test(normalized)) return false;
         return hasKeyword(normalized, tokens, word, isPersian(word));
       });
     });
 
-    // Names / words to look for in title, author
     const nameTokens = [];
     Object.keys(NAMES_FA).forEach((faName) => {
       if ((" " + normalized + " ").includes(" " + normalize(faName) + " ")) {
@@ -311,9 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // Tiny popularity bonus, only used to break ties
       score += Math.min((entry.book.approximateSalesInMillions || 0) / 1000, 0.2);
-
       return { entry, score, reasons, authorHit };
     });
 
@@ -321,7 +293,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter((item) => item.reasons.length > 0 && item.score >= 1)
       .sort((a, b) => b.score - a.score || (b.entry.book.approximateSalesInMillions || 0) - (a.entry.book.approximateSalesInMillions || 0));
 
-    // At most one book per author (unless the user asked for that author)
     const picked = [];
     const perAuthor = {};
     matched.forEach((item) => {
@@ -339,9 +310,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return { picked, totalMatches: matched.filter((item) => item.score >= threshold).length };
   }
 
-  // ---------------------------------------------------------------------------
-  // Chat UI (text is always inserted with textContent, never as HTML)
-  // ---------------------------------------------------------------------------
   function addMessage(text, who, persian) {
     const bubble = document.createElement("div");
     bubble.className = "assistant-msg " + who;
@@ -352,26 +320,21 @@ document.addEventListener("DOMContentLoaded", () => {
     return bubble;
   }
 
-  // Title without the text in parentheses, used as the search text in the table
   function searchText(book) {
     return String(book.book).replace(/\s*\(.*?\)\s*/g, " ").trim();
   }
 
-  // Only used on a page that has its own search box and table
-  function showInTable(book) {
-    if (!searchInput) return;
-    searchInput.value = searchText(book);
-    searchInput.dispatchEvent(new Event("input", { bubbles: true }));
-    const table = document.getElementById("booksTable");
-    if (table) table.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   function addRecommendations(items, persian) {
+    const grid = document.createElement("div");
+    grid.className = "assistant-recs";
+
     items.forEach((item) => {
       const book = item.entry.book;
       const card = document.createElement("div");
       card.className = "assistant-rec";
       if (persian) card.dir = "rtl";
+
+      const infoBox = document.createElement("div");
 
       const title = document.createElement("div");
       title.className = "rec-title";
@@ -395,22 +358,27 @@ document.addEventListener("DOMContentLoaded", () => {
           : "Matches: " + uniqueReasons.join(", ");
       }
 
-      let button;
-      if (searchInput) {
-        button = document.createElement("button");
-        button.type = "button";
-        button.addEventListener("click", () => showInTable(book));
-      } else {
-        // No table on this page: open the Book List page with the title already searched
-        button = document.createElement("a");
-        button.href = "books.html?search=" + encodeURIComponent(searchText(book));
-      }
-      button.className = "rec-button";
-      button.textContent = persian ? "نمایش در جدول" : "Show in table";
+      infoBox.append(title, meta, why);
 
-      card.append(title, meta, why, button);
-      log.appendChild(card);
+      const actions = document.createElement("div");
+      actions.className = "rec-actions";
+
+      const listLink = document.createElement("a");
+      listLink.href = "index.html?search=" + encodeURIComponent(searchText(book));
+      listLink.className = "rec-button";
+      listLink.textContent = persian ? "نمایش در فهرست" : "Show in Book List";
+
+      const detailLink = document.createElement("a");
+      detailLink.href = "detail.html?title=" + encodeURIComponent(String(book.book).trim());
+      detailLink.className = "rec-button secondary";
+      detailLink.textContent = persian ? "جزئیات کتاب" : "View details";
+
+      actions.append(listLink, detailLink);
+      card.append(infoBox, actions);
+      grid.appendChild(card);
     });
+
+    log.appendChild(grid);
     log.scrollTop = log.scrollHeight;
   }
 
@@ -418,7 +386,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const info = analyze(message);
     const persian = info.persian;
 
-    // Nothing understood
     if (info.concepts.length === 0 && info.nameTokens.length === 0) {
       addMessage(
         persian
@@ -432,7 +399,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const { picked, totalMatches } = recommend(info);
 
-    // Nothing found in the list
     if (picked.length === 0) {
       addMessage(
         persian
@@ -501,6 +467,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Welcome message
   addMessage("Hi! Tell me what kind of books you like and I will pick some from the list. / سلام! بگو چه نوع کتابی دوست داری تا از بین کتاب‌های لیست پیشنهاد بدم.", "bot", false);
 });

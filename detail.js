@@ -2,11 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof books === "undefined") return;
 
   const $ = (id) => document.getElementById(id);
-  const stage = $("stage");
 
-  // ---------------------------------------------------------------------------
-  // Find the book: detail.html?title=The%20Hobbit
-  // ---------------------------------------------------------------------------
   const wanted = (new URLSearchParams(window.location.search).get("title") || "").trim().toLowerCase();
   const book = books.find((b) => String(b.book ?? "").trim().toLowerCase() === wanted);
 
@@ -18,22 +14,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
   const title = String(book.book).trim();
   const authors = String(book.authors ?? "").trim();
   const sales = Number(book.approximateSalesInMillions) || 0;
 
-  // If there are several authors, use the first one
   function firstAuthor(text) {
     return String(text ?? "").split(/,| and | & |;/)[0].trim();
   }
 
-  // Title without the text in parentheses, used for the outside links
   const cleanTitle = title.replace(/\s*\(.*?\)\s*/g, " ").trim();
 
-  // Blank cover with a book icon, used when a book has no cover image
   const NO_COVER_IMG =
     "data:image/svg+xml;utf8," +
     encodeURIComponent(
@@ -50,9 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "</svg>"
     );
 
-  // ---------------------------------------------------------------------------
-  // Text
-  // ---------------------------------------------------------------------------
   document.title = title + " - Bestselling Books";
   $("bookTitle").textContent = title;
   const authorName = document.createElement("span");
@@ -66,20 +53,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("salesBig").textContent = sales + " million";
 
-  // Rank by sales (books with the same sales share the same rank)
   const rank = books.filter((b) => (Number(b.approximateSalesInMillions) || 0) > sales).length + 1;
   $("rankText").textContent = "Ranked #" + rank + " of " + books.length + " books by sales";
 
-  // ---------------------------------------------------------------------------
-  // Links to outside pages (open in a new tab)
-  // ---------------------------------------------------------------------------
   const searchText = encodeURIComponent((cleanTitle + " " + firstAuthor(authors)).trim());
   $("wikiLink").href = "https://en.wikipedia.org/wiki/Special:Search?search=" + searchText;
   $("findLink").href = "https://openlibrary.org/search?q=" + searchText;
 
-  // ---------------------------------------------------------------------------
-  // Back button: go back to the list exactly as it was (same search), if we came from it
-  // ---------------------------------------------------------------------------
   $("backLink").addEventListener("click", (event) => {
     let cameFromSite = false;
     try {
@@ -93,9 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ---------------------------------------------------------------------------
-  // Save button (kept in this browser only)
-  // ---------------------------------------------------------------------------
   const SAVED_KEY = "savedBooks_v1";
 
   function readSaved() {
@@ -110,9 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function writeSaved(list) {
     try {
       localStorage.setItem(SAVED_KEY, JSON.stringify(list));
-    } catch (err) {
-      // Storage may be blocked; the button still changes for this visit
-    }
+    } catch (err) {}
   }
 
   const saveButton = $("saveButton");
@@ -136,10 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showSaved(index === -1);
   });
 
-  // ---------------------------------------------------------------------------
-  // Author photo: shown when the mouse is on the author name
-  // (uses the same saved photo addresses as the Book List page)
-  // ---------------------------------------------------------------------------
   const AUTHOR_STORAGE_KEY = "authorPhotoCache_v1";
   const authorKey = firstAuthor(authors);
 
@@ -173,12 +144,9 @@ document.addEventListener("DOMContentLoaded", () => {
         latest[authorKey] = photo;
         try {
           localStorage.setItem(AUTHOR_STORAGE_KEY, JSON.stringify(latest));
-        } catch (err) {
-          // Storage may be full or blocked
-        }
+        } catch (err) {}
         return photo || null;
       } catch (err) {
-        // Network error: try again next time
         authorPhotoPromise = null;
         return null;
       }
@@ -186,7 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return authorPhotoPromise;
   }
 
-  // Floating photo (outside the card, so it is never clipped)
   const tooltip = document.createElement("div");
   tooltip.className = "author-tooltip";
   document.body.appendChild(tooltip);
@@ -201,7 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let left = rect.left;
     if (left + tipWidth > window.innerWidth - 8) left = window.innerWidth - tipWidth - 8;
 
-    // Under the name; if there is no room, above it
     let top = rect.bottom + 8;
     if (top + tipHeight > window.innerHeight - 8) top = rect.top - tipHeight - 8;
 
@@ -231,7 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Show the photo only when it is fully loaded (instant if it was preloaded)
     const probe = new Image();
     probe.onload = () => {
       const img = document.createElement("img");
@@ -254,14 +219,10 @@ document.addEventListener("DOMContentLoaded", () => {
   authorName.addEventListener("blur", hideTooltip);
   window.addEventListener("scroll", hideTooltip);
 
-  // Get the photo ready in the background so the hover is instant
   findAuthorPhoto().then((photo) => {
     if (photo) new Image().src = photo;
   });
 
-  // ---------------------------------------------------------------------------
-  // Cover: uses the same saved cover addresses as the Book List page
-  // ---------------------------------------------------------------------------
   const COVER_STORAGE_KEY = "bookCoverCache_v1";
   const coverImg = $("detailCover");
 
@@ -289,22 +250,15 @@ document.addEventListener("DOMContentLoaded", () => {
       cache[key] = id ? "https://covers.openlibrary.org/b/id/" + id + "-M.jpg" : "";
       try {
         localStorage.setItem(COVER_STORAGE_KEY, JSON.stringify(cache));
-      } catch (err) {
-        // Storage may be full or blocked
-      }
+      } catch (err) {}
       return cache[key] || null;
     } catch (err) {
       return null;
     }
   }
 
-  function showPlaceholder() {
-    coverImg.onerror = null;
-    coverImg.alt = "No cover available";
-    coverImg.src = NO_COVER_IMG;
-  }
-
   coverImg.alt = title;
+  coverImg.classList.add("no-cover");
   coverImg.src = NO_COVER_IMG;
 
   findCoverUrl().then((mediumUrl) => {
@@ -314,14 +268,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const loader = new Image();
     loader.onload = () => {
       coverImg.alt = title;
+      coverImg.classList.remove("no-cover");
       coverImg.src = largeUrl;
       $("heroArt").style.backgroundImage = 'url("' + largeUrl + '")';
       $("heroArt").classList.add("ready");
     };
     loader.onerror = () => {
-      // The large version is missing: try the medium one, otherwise keep the icon
       const fallback = new Image();
       fallback.onload = () => {
+        coverImg.classList.remove("no-cover");
         coverImg.src = mediumUrl;
         $("heroArt").style.backgroundImage = 'url("' + mediumUrl + '")';
         $("heroArt").classList.add("ready");

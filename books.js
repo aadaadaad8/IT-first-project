@@ -5,15 +5,36 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultsCount = document.getElementById("resultsCount");
   const viewToggle = document.getElementById("viewToggle");
   const menuButton = document.getElementById("menuButton");
+  const booksRailLink = document.getElementById("booksRailLink");
+  const savedRailLink = document.getElementById("savedRailLink");
 
-  // Most popular first (stable sort: books with equal sales keep the order of data.js)
+  const params = new URLSearchParams(window.location.search);
+  const isSavedView = params.get("saved") === "1";
+
+  if (isSavedView) {
+    if (booksRailLink) booksRailLink.removeAttribute("aria-current");
+    if (savedRailLink) savedRailLink.setAttribute("aria-current", "page");
+    document.title = "Saved Books - Bestselling Books";
+  }
+
   const sortedBooks = books.slice().sort(
     (a, b) => (Number(b.approximateSalesInMillions) || 0) - (Number(a.approximateSalesInMillions) || 0)
   );
   const maxSales = Math.max(...sortedBooks.map((b) => Number(b.approximateSalesInMillions) || 0), 1);
 
-  // ----- Added: image helpers (covers from Open Library, author photos from Wikipedia) -----
-  // Author photo URLs are remembered in the browser too
+  function readSavedBooks() {
+    try {
+      const list = JSON.parse(localStorage.getItem("savedBooks_v1"));
+      return Array.isArray(list) ? list : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  const baseBooks = isSavedView
+    ? sortedBooks.filter((b) => readSavedBooks().includes(String(b.book).trim()))
+    : sortedBooks;
+
   const AUTHOR_STORAGE_KEY = "authorPhotoCache_v1";
   let authorCache = {};
   try {
@@ -25,12 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveAuthorCache() {
     try {
       localStorage.setItem(AUTHOR_STORAGE_KEY, JSON.stringify(authorCache));
-    } catch (err) {
-      // Storage may be full or blocked; the page still works without it
-    }
+    } catch (err) {}
   }
 
-  // Download an image in the background so it is ready when it is needed
   const preloadedImages = {};
   function preloadImage(url) {
     if (!url || preloadedImages[url]) return;
@@ -39,8 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
     preload.src = url;
   }
 
-
-  // Cover URLs are remembered in the browser, so next visits are almost instant
   const COVER_STORAGE_KEY = "bookCoverCache_v1";
   let coverCache = {};
   try {
@@ -52,13 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveCoverCache() {
     try {
       localStorage.setItem(COVER_STORAGE_KEY, JSON.stringify(coverCache));
-    } catch (err) {
-      // Storage may be full or blocked; the page still works without it
-    }
+    } catch (err) {}
   }
 
-  // Run several requests at the same time, but not too many.
-  // "urgent" jobs (like a hover) jump to the front of the queue.
   function createLimiter(maxConcurrent) {
     let active = 0;
     const queue = [];
@@ -89,12 +101,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const enqueueCover = createLimiter(6);
   const enqueueAuthor = createLimiter(4);
-
-  // Avoid sending the same request twice
   const pendingCovers = {};
   const pendingAuthors = {};
 
-  // Book icon on a plain cover, used when a book has no cover image
   const NO_COVER_IMG =
     "data:image/svg+xml;utf8," +
     encodeURIComponent(
@@ -111,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "</svg>"
     );
 
-  // Floating element for the author photo (outside the table so it is never clipped)
   const tooltip = document.createElement("div");
   tooltip.className = "author-tooltip";
   document.body.appendChild(tooltip);
@@ -124,21 +132,21 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/>/g, "&gt;");
   }
 
-  // If there are several authors, use the first one
+  function stripDiacritics(text) {
+    return String(text ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
   function firstAuthor(authors) {
     return String(authors ?? "").split(/,| and | & |;/)[0].trim();
   }
 
   function fetchCover(title, authors) {
     const key = title + "|" + authors;
-
-    // Already known (a string means a cover was found, "" means there is none)
     if (key in coverCache) {
       return Promise.resolve(coverCache[key] || null);
     }
     if (key in pendingCovers) return pendingCovers[key];
 
-    // Remove text inside parentheses, e.g. (Le Petit Prince)
     const cleanTitle = String(title).replace(/\s*\(.*?\)\s*/g, " ").trim();
     const author = firstAuthor(authors);
 
@@ -157,7 +165,6 @@ document.addEventListener("DOMContentLoaded", () => {
         saveCoverCache();
         return coverCache[key] || null;
       } catch (err) {
-        // Network error: do not remember it, so it can be tried again later
         return null;
       } finally {
         delete pendingCovers[key];
@@ -169,8 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function fetchAuthorPhoto(authors, urgent) {
     const name = firstAuthor(authors);
-
-    // Already known (a string means a photo was found, "" means there is none)
     if (name in authorCache) {
       return Promise.resolve(authorCache[name] || null);
     }
@@ -187,7 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
         saveAuthorCache();
         return authorCache[name] || null;
       } catch (err) {
-        // Network error: do not remember it, so it can be tried again later
         return null;
       } finally {
         delete pendingAuthors[name];
@@ -197,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return pendingAuthors[name];
   }
 
-  // Show the blank cover and make sure it does not enlarge on hover
   function showPlaceholder(img) {
     img.onerror = null;
     img.classList.remove("has-cover");
@@ -206,20 +209,18 @@ document.addEventListener("DOMContentLoaded", () => {
     img.src = NO_COVER_IMG;
   }
 
-  // Covers are loaded shortly before they come into view
   function onCoverVisible(entries, observer) {
     entries.forEach(async (entry) => {
       if (!entry.isIntersecting) return;
       const img = entry.target;
       observer.unobserve(img);
 
-      // Get the author's photo ready in the background for the hover
       fetchAuthorPhoto(img.dataset.authors).then(preloadImage);
 
       const src = await fetchCover(img.dataset.title, img.dataset.authors);
       if (src) {
-        // If the image fails to load, fall back to the blank cover
         img.onerror = () => showPlaceholder(img);
+        img.classList.remove("no-cover");
         img.classList.add("has-cover");
         img.src = src;
       } else {
@@ -228,13 +229,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Row (carousel) view: the row scrolls sideways, so it is the "root" of the observer
   const rowObserver = new IntersectionObserver(onCoverVisible, {
     root: grid,
     rootMargin: "0px 1500px"
   });
 
-  // Grid view: the whole page scrolls up and down
   const pageObserver = new IntersectionObserver(onCoverVisible, {
     rootMargin: "1500px 0px"
   });
@@ -243,7 +242,6 @@ document.addEventListener("DOMContentLoaded", () => {
     (document.body.classList.contains("view-grid") ? pageObserver : rowObserver).observe(img);
   }
 
-  // Place the author photo under the author name (fixed, does not follow the mouse)
   function positionAuthorTooltip(target) {
     const rect = target.getBoundingClientRect();
     const tipHeight = tooltip.offsetHeight || 190;
@@ -254,7 +252,6 @@ document.addEventListener("DOMContentLoaded", () => {
       left = window.innerWidth - tipWidth - 8;
     }
 
-    // Show below the name; if there is no room, show above it
     let top = rect.bottom + 8;
     if (top + tipHeight > window.innerHeight - 8) {
       top = rect.top - tipHeight - 8;
@@ -264,8 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tooltip.style.top = Math.max(8, top) + "px";
   }
 
-  // ----- End of added helpers -----
-
   function renderBooks(list) {
     grid.innerHTML = "";
     grid.scrollLeft = 0;
@@ -273,7 +268,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (list.length === 0) {
       const empty = document.createElement("p");
       empty.className = "empty-message";
-      empty.textContent = "No matching books found.";
+      empty.textContent = isSavedView && !searchInput.value.trim()
+        ? "You haven't saved any books yet. Open any book cover and click Save to bookmark it here."
+        : "No matching books found.";
       grid.appendChild(empty);
       return;
     }
@@ -288,7 +285,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <a class="cover-link" draggable="false"
            href="detail.html?title=${encodeURIComponent(String(book.book).trim())}"
            aria-label="Open the details of ${escapeHtml(book.book)}">
-          <img class="book-cover" draggable="false"
+          <img class="book-cover no-cover" draggable="false"
+               src="${NO_COVER_IMG}"
                alt="${escapeHtml(book.book)}"
                data-title="${escapeHtml(book.book)}"
                data-authors="${escapeHtml(book.authors)}">
@@ -303,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="sales-text">About ${escapeHtml(sales)} million copies sold</div>
           </div>
           <div class="book-meta">First published ${escapeHtml(book.firstPublished)} &middot; ${escapeHtml(book.originalLanguage)}</div>
-          ${book.genre ? `<span class="book-genre">${escapeHtml(book.genre)}</span>` : ""}
+          ${book.genre ? `<div class="book-genre">${escapeHtml(book.genre)}</div>` : ""}
         </div>
       `;
 
@@ -312,7 +310,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ----- Added: show author photo on hover -----
   let hoveredAuthor = null;
 
   function showAuthorTooltip(target, html) {
@@ -330,7 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const authors = target.dataset.author;
 
     const photo = await fetchAuthorPhoto(authors, true);
-    // If the mouse already left (or moved to another author), do nothing
     if (hoveredAuthor !== target) return;
 
     if (!photo) {
@@ -338,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Show the photo only when it is fully loaded (instant if it was preloaded)
     const probe = new Image();
     probe.onload = () => {
       showAuthorTooltip(target, `<img src="${photo}" alt="${escapeHtml(authors)}">`);
@@ -355,9 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tooltip.style.display = "none";
     }
   });
-  // ----- End of added hover logic -----
 
-  // Hide the author photo if the page is scrolled while hovering
   function hideFloating() {
     tooltip.style.display = "none";
   }
@@ -366,42 +359,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function applySearch() {
     const typed = searchInput.value.trim();
-    const query = typed.toLowerCase();
+    const query = stripDiacritics(typed);
 
     const filtered = !query
-      ? sortedBooks
-      : sortedBooks.filter((book) =>
-          String(book.book ?? "").toLowerCase().includes(query) ||
-          String(book.authors ?? "").toLowerCase().includes(query) ||
-          String(book.originalLanguage ?? "").toLowerCase().includes(query) ||
-          String(book.firstPublished ?? "").toLowerCase().includes(query) ||
-          String(book.approximateSalesInMillions ?? "").toLowerCase().includes(query) ||
-          String(book.genre ?? "").toLowerCase().includes(query)
-        );
+      ? baseBooks
+      : baseBooks.filter((book) => {
+          const hay = stripDiacritics(
+            `${book.book ?? ""} ${book.authors ?? ""} ${book.originalLanguage ?? ""} ${book.firstPublished ?? ""} ${book.approximateSalesInMillions ?? ""} ${book.genre ?? ""}`
+          );
+          return hay.includes(query);
+        });
 
-    resultsTitle.textContent = typed ? "Search results" : "Most Popular Picks";
-    resultsCount.textContent = typed
-      ? filtered.length + " of " + sortedBooks.length + " books"
-      : sortedBooks.length + " best-selling books, from the most to the least sold";
+    if (isSavedView) {
+      resultsTitle.textContent = typed ? "Saved Search Results" : "Saved Books";
+      resultsCount.textContent = filtered.length === 0
+        ? (typed ? "No saved books match your search" : "No saved books yet")
+        : `${filtered.length} saved ${filtered.length === 1 ? "book" : "books"}`;
+    } else {
+      resultsTitle.textContent = typed ? "Search results" : "Most Popular Picks";
+      resultsCount.textContent = typed
+        ? filtered.length + " of " + baseBooks.length + " books"
+        : baseBooks.length + " best-selling books, from the most to the least sold";
+    }
 
     renderBooks(filtered);
   }
 
-  // A link like books.html?search=The%20Hobbit opens the page already filtered
-  const initialSearch = new URLSearchParams(window.location.search).get("search");
+  const initialSearch = params.get("search");
   if (initialSearch) searchInput.value = initialSearch;
 
   applySearch();
   searchInput.addEventListener("input", applySearch);
 
-  // Row view (default, like the design) <-> grid view with all the books
   viewToggle.addEventListener("click", () => {
     const isGrid = document.body.classList.toggle("view-grid");
     viewToggle.setAttribute("aria-pressed", String(isGrid));
     applySearch();
   });
 
-  // Arrow buttons for the row
   const prevButton = document.getElementById("prevButton");
   const nextButton = document.getElementById("nextButton");
   function scrollRow(direction) {
@@ -410,7 +405,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (prevButton) prevButton.addEventListener("click", () => scrollRow(-1));
   if (nextButton) nextButton.addEventListener("click", () => scrollRow(1));
 
-  // Drag the row with the mouse (touch screens already scroll with a swipe)
   let drag = null;
   let suppressClick = false;
   grid.addEventListener("pointerdown", (event) => {
@@ -428,7 +422,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (drag.moved) grid.scrollLeft = drag.left - dx;
   });
   window.addEventListener("pointerup", () => {
-    // After a drag the browser still sends a click: ignore that one click
     if (drag && drag.moved) {
       suppressClick = true;
       setTimeout(() => { suppressClick = false; }, 0);
@@ -443,7 +436,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, true);
 
-  // Side menu: hidden by default on small screens
   if (window.innerWidth < 900) document.body.classList.add("rail-hidden");
   menuButton.addEventListener("click", () => {
     document.body.classList.toggle("rail-hidden");

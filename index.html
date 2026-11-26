@@ -5,95 +5,99 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bestselling Books</title>
 
-  <!-- Load stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Roboto+Slab:wght@300;400&display=swap">
 
-  <!-- Load Chart.js from jsDelivr CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="books.css">
 
-  <!-- Load dataset, table logic, and chart logic in order -->
   <script defer src="data.js"></script>
-  <script defer src="charts.js"></script>
-  <script defer src="assistant.js"></script>
-  <script defer src="insights.js"></script>
+  <script defer src="books.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Bestselling Books Explorer</h1>
-      <p class="subtitle">Browse, search, and visualize historical book sales data.</p>
-      <nav class="site-nav" aria-label="Main">
-        <a href="index.html" aria-current="page">Home</a>
-        <a href="books.html">Book List</a>
-      </nav>
-    </header>
+  <button type="button" id="menuButton" class="menu-button" aria-label="Show or hide the side menu" aria-controls="sideRail">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
 
-    <!-- Book Assistant Section -->
-    <section class="card assistant-card">
-      <h2>Book Assistant</h2>
-      <p class="assistant-note">
-        Tell me what you like and I will pick books from the book list. /
-        علایقت رو بگو تا از بین کتاب‌های لیست پیشنهاد بدم.
-      </p>
+  <nav id="sideRail" class="side-rail" aria-label="Main">
+    <div class="rail-top">
+      <a class="rail-link" id="booksRailLink" href="index.html" aria-current="page" title="Book List" aria-label="Book List">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+          <path d="M9 3v18M13 8h3"/>
+        </svg>
+      </a>
 
-      <div id="assistantLog" class="assistant-log" aria-live="polite"></div>
+      <a class="rail-link" href="charts.html" title="Sales Charts" aria-label="Sales Charts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9M13 17V5M8 17v-3"/>
+        </svg>
+      </a>
 
-      <div id="assistantChips" class="assistant-chips">
-        <button type="button" class="assistant-chip" data-text="Fantasy adventure">Fantasy adventure</button>
-        <button type="button" class="assistant-chip" data-text="Mystery thriller">Mystery thriller</button>
-        <button type="button" class="assistant-chip" data-text="کتاب انگیزشی">کتاب انگیزشی</button>
-        <button type="button" class="assistant-chip" data-text="کتاب کودک">کتاب کودک</button>
-        <button type="button" class="assistant-chip" data-text="رمان تاریخی">رمان تاریخی</button>
-      </div>
+      <a class="rail-link" href="assistant.html" title="Book Assistant" aria-label="Book Assistant">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <path d="M8 9h8M8 13h5"/>
+        </svg>
+      </a>
 
-      <div class="assistant-input-row">
+      <a class="rail-link" id="savedRailLink" href="index.html?saved=1" title="Saved Books" aria-label="Saved Books">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 3h12v18l-6-4-6 4z"/>
+        </svg>
+      </a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <header class="topbar">
+      <h1><a href="index.html" class="brand-link">Bestselling Books</a></h1>
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M20 20l-3.5-3.5"/>
+        </svg>
         <input
           type="text"
-          id="assistantInput"
-          class="assistant-input"
-          placeholder="e.g. fantasy, mystery, psychology... / مثلاً: فانتزی، روانشناسی..."
-          aria-label="Tell the assistant what kind of books you like"
+          id="searchInput"
+          placeholder="Search by title, author, genre, language..."
+          aria-label="Search books"
         >
-        <button type="button" id="assistantSend" class="assistant-send">Send</button>
-      </div>
-    </section>
+      </label>
+    </header>
 
-    <!-- Chart Section -->
-    <section class="card">
-      <h2>Sales Comparison (Millions)</h2>
-      <!-- The container height is set dynamically by charts.js -->
-      <div id="chartContainer" class="chart-container">
-        <canvas id="salesChart"></canvas>
-      </div>
-    </section>
+    <main class="panel">
+      <div class="panel-bg" aria-hidden="true"></div>
 
-    <!-- Top 10 Section (follows the search box) -->
-    <section class="card">
-      <h2>Top 10 Best-Selling Books</h2>
-      <p class="chart-note" id="topBooksNote"></p>
-      <div class="chart-box chart-box-tall">
-        <canvas id="topBooksChart"></canvas>
-      </div>
-    </section>
-
-    <!-- Decade and Language Sections -->
-    <div class="chart-grid">
-      <section class="card">
-        <h2>Sales by Decade of First Publication</h2>
-        <p class="chart-note" id="decadeNote"></p>
-        <div class="chart-box">
-          <canvas id="decadeChart"></canvas>
+      <div class="panel-head">
+        <div>
+          <h2 id="resultsTitle">Most Popular Picks</h2>
+          <p id="resultsCount" class="results-count"></p>
         </div>
-      </section>
+        <button type="button" id="viewToggle" class="view-toggle" aria-pressed="false" aria-label="Switch between the row view and the grid view with all books" title="Row / grid view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M9 6h11M9 12h11M9 18h11"/>
+            <circle cx="4.5" cy="6" r="1" fill="currentColor"/>
+            <circle cx="4.5" cy="12" r="1" fill="currentColor"/>
+            <circle cx="4.5" cy="18" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
 
-      <section class="card">
-        <h2>Sales by Original Language</h2>
-        <p class="chart-note">Languages beyond the top 8 are grouped as "Other".</p>
-        <div class="chart-box">
-          <canvas id="languageChart"></canvas>
-        </div>
-      </section>
-    </div>
+      <div id="bookGrid" class="book-grid"></div>
+
+      <div class="carousel-nav">
+        <button type="button" id="prevButton" class="nav-button" aria-label="Previous books">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <button type="button" id="nextButton" class="nav-button" aria-label="Next books">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </main>
   </div>
 </body>
 </html>

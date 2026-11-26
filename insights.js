@@ -1,4 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const menuButton = document.getElementById("menuButton");
+  if (window.innerWidth < 900) document.body.classList.add("rail-hidden");
+  if (menuButton) {
+    menuButton.addEventListener("click", () => {
+      document.body.classList.toggle("rail-hidden");
+    });
+  }
+
   if (typeof Chart === "undefined" || typeof books === "undefined") return;
 
   const searchInput = document.getElementById("searchInput");
@@ -7,13 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const languageCanvas = document.getElementById("languageChart");
   const topBooksNote = document.getElementById("topBooksNote");
 
-  const TEXT_COLOR = "#3c3c43";
-  const GRID_COLOR = "rgba(0, 0, 0, 0.08)";
-  const BLUE = "rgba(49, 110, 190, 0.8)";
-  const ORANGE = "#d97706";
+  const TEXT_COLOR = "#5c5752";
+  const GRID_COLOR = "rgba(0, 0, 0, 0.06)";
+  const BLUE = "rgba(43, 138, 165, 0.85)";
+  const ORANGE = "#f5a623";
   const PALETTE = [
-    "#2f6fb0", "#d97706", "#2f855a", "#c53030", "#6b46c1",
-    "#0e7490", "#b7791f", "#9b2c6f", "#a0aec0"
+    "#2b8aa5", "#f5a623", "#5fb0b7", "#3d7a5a", "#9b5c3e",
+    "#6b5b95", "#c46d5e", "#4f6d7a", "#b8b0a8"
   ];
 
   function toNumber(value) {
@@ -25,18 +33,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return Math.round(n * 10) / 10;
   }
 
-  // Remove text in parentheses and cut long titles for the axis labels
   function shortTitle(title, max) {
     const clean = String(title ?? "").replace(/\s*\(.*?\)\s*/g, " ").trim();
     return clean.length > max ? clean.slice(0, max - 1).trimEnd() + "…" : clean;
   }
 
-  // ---------------------------------------------------------------------------
-  // 1) Top 10 best-selling books (follows the search box, like the table)
-  // ---------------------------------------------------------------------------
   let currentTop = [];
 
-  // Same matching rule as the table search
   function filterBooks(query) {
     if (!query) return books;
     return books.filter((book) =>
@@ -59,8 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
           label: "Approximate sales (millions)",
           data: [],
           backgroundColor: BLUE,
-          borderRadius: 8,
-          maxBarThickness: 28
+          borderRadius: 6,
+          maxBarThickness: 26
         }]
       },
       options: {
@@ -85,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
             title: { display: true, text: "Sales (millions)", color: TEXT_COLOR }
           },
           y: {
-            ticks: { color: TEXT_COLOR, autoSkip: false },
+            ticks: { color: "#3a3a3a", autoSkip: false },
             grid: { display: false }
           }
         }
@@ -112,8 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (matches.length === 0) {
         topBooksNote.textContent = "No matching books.";
       } else if (!query) {
-        topBooksNote.textContent = "The 10 best sellers out of " + books.length + " books." +
-          (searchInput ? " Use the search box to see the top books of a genre, author or language." : "");
+        topBooksNote.textContent = "The 10 best sellers out of " + books.length + " books. Use the top search bar to filter by genre, author or language.";
       } else {
         topBooksNote.textContent = "Top " + currentTop.length + " among the " + matches.length + " books matching \"" + searchInput.value.trim() + "\".";
       }
@@ -123,9 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
   refreshTopBooks();
   if (searchInput) searchInput.addEventListener("input", refreshTopBooks);
 
-  // ---------------------------------------------------------------------------
-  // 2) Sales and number of books per decade of first publication
-  // ---------------------------------------------------------------------------
   if (decadeCanvas) {
     const EARLY_LIMIT = 1900;
     const early = { sales: 0, count: 0 };
@@ -161,8 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // The legend should show the blue of the sales bars (the first bar is gray on purpose)
-    const decadeLegendLabels = { color: TEXT_COLOR };
+    const decadeLegendLabels = { color: "#3a3a3a" };
     if (Chart.defaults && Chart.defaults.plugins && Chart.defaults.plugins.legend) {
       const defaultGenerate = Chart.defaults.plugins.legend.labels.generateLabels;
       decadeLegendLabels.generateLabels = (chart) => {
@@ -192,9 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "bar",
             label: "Total sales (millions)",
             data: salesData,
-            // The first bar groups many centuries, so it gets a different (gray) color
-            backgroundColor: (context) => (context.dataIndex === 0 ? "rgba(113, 128, 150, 0.7)" : BLUE),
-            borderRadius: 8,
+            backgroundColor: (context) => (context.dataIndex === 0 ? "rgba(125, 118, 112, 0.65)" : BLUE),
+            borderRadius: 6,
             yAxisID: "y",
             order: 2
           },
@@ -239,9 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // 3) Sales by original language (doughnut)
-  // ---------------------------------------------------------------------------
   if (languageCanvas) {
     const languages = {};
     books.forEach((book) => {
@@ -275,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
         datasets: [{
           data: sales,
           backgroundColor: PALETTE.slice(0, labels.length),
-          borderColor: "rgba(255, 255, 255, 0.9)",
+          borderColor: "#ffffff",
           borderWidth: 2
         }]
       },
@@ -284,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
         maintainAspectRatio: false,
         cutout: "55%",
         plugins: {
-          legend: { position: "bottom", labels: { color: TEXT_COLOR } },
+          legend: { position: "bottom", labels: { color: "#3a3a3a" } },
           tooltip: {
             callbacks: {
               label: (item) => {
