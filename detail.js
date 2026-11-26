@@ -55,7 +55,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------------------------
   document.title = title + " - Bestselling Books";
   $("bookTitle").textContent = title;
-  $("bookAuthor").textContent = authors;
+  const authorName = document.createElement("span");
+  authorName.className = "author-hover";
+  authorName.tabIndex = 0;
+  authorName.textContent = authors;
+  $("bookAuthor").appendChild(authorName);
   $("factYear").textContent = String(book.firstPublished ?? "") || "Not listed";
   $("factLang").textContent = String(book.originalLanguage ?? "").trim() || "Not listed";
   $("factGenre").textContent = String(book.genre ?? "").trim() || "Not listed in the dataset";
@@ -130,6 +134,129 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     writeSaved(list);
     showSaved(index === -1);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Author photo: shown when the mouse is on the author name
+  // (uses the same saved photo addresses as the Book List page)
+  // ---------------------------------------------------------------------------
+  const AUTHOR_STORAGE_KEY = "authorPhotoCache_v1";
+  const authorKey = firstAuthor(authors);
+
+  function readAuthorCache() {
+    try {
+      return JSON.parse(localStorage.getItem(AUTHOR_STORAGE_KEY)) || {};
+    } catch (err) {
+      return {};
+    }
+  }
+
+  let authorPhotoPromise = null;
+  function findAuthorPhoto() {
+    if (authorPhotoPromise) return authorPhotoPromise;
+
+    const cache = readAuthorCache();
+    if (authorKey in cache) {
+      authorPhotoPromise = Promise.resolve(cache[authorKey] || null);
+      return authorPhotoPromise;
+    }
+
+    authorPhotoPromise = (async () => {
+      try {
+        const url =
+          "https://en.wikipedia.org/api/rest_v1/page/summary/" +
+          encodeURIComponent(authorKey.replace(/ /g, "_"));
+        const res = await fetch(url);
+        const data = await res.json();
+        const photo = (data.thumbnail && data.thumbnail.source) || "";
+        const latest = readAuthorCache();
+        latest[authorKey] = photo;
+        try {
+          localStorage.setItem(AUTHOR_STORAGE_KEY, JSON.stringify(latest));
+        } catch (err) {
+          // Storage may be full or blocked
+        }
+        return photo || null;
+      } catch (err) {
+        // Network error: try again next time
+        authorPhotoPromise = null;
+        return null;
+      }
+    })();
+    return authorPhotoPromise;
+  }
+
+  // Floating photo (outside the card, so it is never clipped)
+  const tooltip = document.createElement("div");
+  tooltip.className = "author-tooltip";
+  document.body.appendChild(tooltip);
+
+  let hovering = false;
+
+  function placeTooltip() {
+    const rect = authorName.getBoundingClientRect();
+    const tipHeight = tooltip.offsetHeight || 190;
+    const tipWidth = tooltip.offsetWidth || 152;
+
+    let left = rect.left;
+    if (left + tipWidth > window.innerWidth - 8) left = window.innerWidth - tipWidth - 8;
+
+    // Under the name; if there is no room, above it
+    let top = rect.bottom + 8;
+    if (top + tipHeight > window.innerHeight - 8) top = rect.top - tipHeight - 8;
+
+    tooltip.style.left = Math.max(8, left) + "px";
+    tooltip.style.top = Math.max(8, top) + "px";
+  }
+
+  function showTooltip(html) {
+    if (!hovering) return;
+    tooltip.innerHTML = html;
+    tooltip.style.display = "block";
+    placeTooltip();
+  }
+
+  function hideTooltip() {
+    hovering = false;
+    tooltip.style.display = "none";
+  }
+
+  async function onAuthorEnter() {
+    hovering = true;
+    const photo = await findAuthorPhoto();
+    if (!hovering) return;
+
+    if (!photo) {
+      showTooltip('<div class="tooltip-empty">No photo available</div>');
+      return;
+    }
+
+    // Show the photo only when it is fully loaded (instant if it was preloaded)
+    const probe = new Image();
+    probe.onload = () => {
+      const img = document.createElement("img");
+      img.src = photo;
+      img.alt = firstAuthor(authors);
+      tooltip.innerHTML = "";
+      tooltip.appendChild(img);
+      if (hovering) {
+        tooltip.style.display = "block";
+        placeTooltip();
+      }
+    };
+    probe.onerror = () => showTooltip('<div class="tooltip-empty">No photo available</div>');
+    probe.src = photo;
+  }
+
+  authorName.addEventListener("mouseenter", onAuthorEnter);
+  authorName.addEventListener("mouseleave", hideTooltip);
+  authorName.addEventListener("focus", onAuthorEnter);
+  authorName.addEventListener("blur", hideTooltip);
+  window.addEventListener("scroll", hideTooltip);
+
+  // Get the photo ready in the background so the hover is instant
+  findAuthorPhoto().then((photo) => {
+    if (photo) new Image().src = photo;
   });
 
   // ---------------------------------------------------------------------------

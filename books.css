@@ -447,8 +447,7 @@ body {
   display: none;
 }
 
-/* ----- Enlarged cover and author photo (shown on hover) ----- */
-.cover-preview,
+/* ----- Author photo (shown when the mouse is on the author name) ----- */
 .author-tooltip {
   display: none;
   position: fixed;
@@ -458,13 +457,6 @@ body {
   background: #ffffff;
   border-radius: 6px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
-}
-
-.cover-preview img {
-  display: block;
-  width: 208px;
-  max-height: 318px;
-  object-fit: contain;
 }
 
 .author-tooltip img {

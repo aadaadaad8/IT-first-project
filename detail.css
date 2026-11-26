@@ -186,6 +186,42 @@ body {
   color: #333;
 }
 
+/* The author name shows the author's photo when the mouse is on it */
+.author-hover {
+  cursor: pointer;
+  border-bottom: 1px dotted #999;
+  outline: none;
+}
+
+.author-hover:focus-visible {
+  outline: 2px solid #2b8aa5;
+  outline-offset: 3px;
+}
+
+.author-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  padding: 6px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.author-tooltip img {
+  display: block;
+  width: 140px;
+  height: 180px;
+  object-fit: cover;
+}
+
+.tooltip-empty {
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .facts {
   display: flex;
   flex-wrap: wrap;

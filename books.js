@@ -116,11 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
   tooltip.className = "author-tooltip";
   document.body.appendChild(tooltip);
 
-  // Floating element for the enlarged book cover
-  const coverPreview = document.createElement("div");
-  coverPreview.className = "cover-preview";
-  document.body.appendChild(coverPreview);
-
   function escapeHtml(text) {
     return String(text ?? "")
       .replace(/&/g, "&amp;")
@@ -269,23 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tooltip.style.top = Math.max(8, top) + "px";
   }
 
-  // Place the enlarged cover next to the small one, kept inside the screen
-  function positionCoverPreview(img) {
-    const rect = img.getBoundingClientRect();
-    const previewWidth = 220;
-    const previewHeight = 330;
-
-    let left = rect.right + 12;
-    if (left + previewWidth > window.innerWidth) {
-      left = rect.left - previewWidth - 12;
-    }
-
-    let top = rect.top + rect.height / 2 - previewHeight / 2;
-    top = Math.max(8, Math.min(top, window.innerHeight - previewHeight - 8));
-
-    coverPreview.style.left = left + "px";
-    coverPreview.style.top = top + "px";
-  }
   // ----- End of added helpers -----
 
   function renderBooks(list) {
@@ -379,47 +357,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   // ----- End of added hover logic -----
 
-  // ----- Added: enlarge book cover on hover (only real covers, not the blank one) -----
-  grid.addEventListener("mouseover", (event) => {
-    const img = event.target.closest(".book-cover.has-cover");
-    if (!img) return;
-
-    // Show the already loaded cover instantly, then switch to the sharper large version
-    const mediumSrc = img.src;
-    const largeSrc = mediumSrc.replace("-M.jpg", "-L.jpg");
-
-    coverPreview.innerHTML = `<img src="${mediumSrc}" alt="${escapeHtml(img.alt)}">`;
-    coverPreview.style.display = "block";
-    positionCoverPreview(img);
-
-    if (largeSrc !== mediumSrc) {
-      const previewImg = coverPreview.querySelector("img");
-      const big = new Image();
-      big.onload = () => {
-        // Swap only if this preview is still the one on screen
-        if (coverPreview.contains(previewImg)) previewImg.src = largeSrc;
-      };
-      big.src = largeSrc;
-    }
-  });
-
-  grid.addEventListener("mouseout", (event) => {
-    if (event.target.closest(".book-cover")) {
-      coverPreview.style.display = "none";
-    }
-  });
-
-  // Hide the floating photos if the page is scrolled while hovering
+  // Hide the author photo if the page is scrolled while hovering
   function hideFloating() {
-    coverPreview.style.display = "none";
     tooltip.style.display = "none";
   }
   grid.addEventListener("scroll", hideFloating);
-  window.addEventListener("scroll", () => {
-    coverPreview.style.display = "none";
-    tooltip.style.display = "none";
-  });
-  // ----- End of added cover hover logic -----
+  window.addEventListener("scroll", hideFloating);
 
   function applySearch() {
     const typed = searchInput.value.trim();
