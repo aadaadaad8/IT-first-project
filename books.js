@@ -446,38 +446,159 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function runReturnEntrance() {
     document.body.classList.remove("page-exit-left", "page-exit-right");
+    document.querySelectorAll(".book-cover").forEach((el) => { el.style.opacity = ""; });
     document.documentElement.classList.remove("page-transition-lock");
     navigatingToDetail = false;
 
+    let backCoverData = null;
+    try {
+      const rawBack = sessionStorage.getItem("bookCoverBackTransition");
+      if (rawBack) {
+        backCoverData = JSON.parse(rawBack);
+        sessionStorage.removeItem("bookCoverBackTransition");
+      }
+    } catch (err) {}
+
     if (sessionStorage.getItem("bookTransition") === "back-to-list") {
       sessionStorage.removeItem("bookTransition");
+      const existingFloater = document.getElementById("sharedCoverFloater");
+
+      try {
+        const savedScroll = Number(sessionStorage.getItem("bookGridScrollLeft") || "0");
+        if (savedScroll > 0) grid.scrollLeft = savedScroll;
+      } catch (err) {}
+
       if (reduceMotion) {
-        document.documentElement.classList.remove("page-enter-from-right", "page-enter-active", "rail-reveal-active");
+        if (existingFloater) existingFloater.remove();
+        document.documentElement.classList.remove("page-enter-from-right", "page-enter-active", "rail-reveal-active", "cover-back-flying");
         return;
       }
+
       document.documentElement.classList.add("page-transition-lock", "page-enter-from-right");
-      requestAnimationFrame(() => {
+
+      let targetCoverEl = null;
+      if (backCoverData && backCoverData.title) {
+        const wantedTitle = String(backCoverData.title).trim();
+        const allImgs = grid.querySelectorAll("img.book-cover");
+        for (const el of allImgs) {
+          if (String(el.dataset.title || "").trim() === wantedTitle) {
+            targetCoverEl = el;
+            break;
+          }
+        }
+      }
+
+      if (backCoverData && targetCoverEl) {
+        targetCoverEl.classList.add("book-cover-return-hidden");
+        if (backCoverData.hasCover) {
+          targetCoverEl.classList.remove("no-cover");
+          targetCoverEl.src = backCoverData.src;
+        }
+        const pageEl = document.querySelector(".page");
+        const box = targetCoverEl.getBoundingClientRect();
+        let offsetX = 0;
+        let offsetY = 0;
+        if (pageEl) {
+          const tStr = window.getComputedStyle(pageEl).transform;
+          if (tStr && tStr !== "none") {
+            const m = new DOMMatrix(tStr);
+            offsetX = m.m41;
+            offsetY = m.m42;
+          }
+        }
+        const settledBox = {
+          left: box.left - offsetX,
+          top: box.top - offsetY,
+          width: box.width,
+          height: box.height,
+        };
+        const toRect = backCoverData.hasCover
+          ? getContainedRect(settledBox, backCoverData.naturalWidth, backCoverData.naturalHeight, "top")
+          : settledBox;
+
+        const floater = existingFloater || (() => {
+          const el = document.createElement("img");
+          el.id = "sharedCoverFloater";
+          el.src = backCoverData.src;
+          el.alt = "";
+          el.referrerPolicy = "no-referrer";
+          el.style.cssText =
+            "position:fixed;left:0;top:0;z-index:9999;pointer-events:none;display:block;will-change:transform,width,height;" +
+            "transform:translate3d(" + backCoverData.fromRect.left + "px," + backCoverData.fromRect.top + "px,0);" +
+            "width:" + backCoverData.fromRect.width + "px;height:" + backCoverData.fromRect.height + "px;" +
+            "object-fit:" + (backCoverData.hasCover ? "contain" : "cover") + ";" +
+            "border-radius:" + (backCoverData.hasCover ? "0" : "2px") + ";" +
+            "filter:" + (backCoverData.hasCover ? "drop-shadow(0 18px 28px rgba(0,0,0,0.28))" : "drop-shadow(0 18px 40px rgba(0,0,0,0.3))") + ";";
+          document.body.appendChild(el);
+          return el;
+        })();
+
         requestAnimationFrame(() => {
-          document.documentElement.classList.add("page-enter-active", "rail-reveal-active");
+          requestAnimationFrame(() => {
+            document.documentElement.classList.add("page-enter-active", "rail-reveal-active");
+            floater.style.transition =
+              "transform 1.05s cubic-bezier(0.22,1,0.36,1),width 1.05s cubic-bezier(0.22,1,0.36,1),height 1.05s cubic-bezier(0.22,1,0.36,1),filter 1.05s cubic-bezier(0.22,1,0.36,1)";
+            floater.style.transform = "translate3d(" + toRect.left + "px," + toRect.top + "px,0)";
+            floater.style.width = toRect.width + "px";
+            floater.style.height = toRect.height + "px";
+            floater.style.filter = backCoverData.hasCover
+              ? "drop-shadow(0 6px 12px rgba(0,0,0,0.16))"
+              : "none";
+          });
         });
-      });
+
+        setTimeout(() => {
+          document.documentElement.classList.add("cover-back-handoff");
+          document.documentElement.classList.remove("cover-back-flying");
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              floater.remove();
+              targetCoverEl.classList.remove("book-cover-return-hidden");
+              document.documentElement.classList.remove("cover-back-handoff");
+            });
+          });
+        }, 1070);
+      } else {
+        if (existingFloater) existingFloater.remove();
+        document.documentElement.classList.remove("cover-back-flying");
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            document.documentElement.classList.add("page-enter-active", "rail-reveal-active");
+          });
+        });
+      }
+
       setTimeout(() => {
         document.documentElement.classList.remove(
           "page-transition-lock",
           "page-enter-from-right",
           "page-enter-active"
         );
-      }, 760);
+      }, 1080);
       setTimeout(() => {
         document.documentElement.classList.remove("rail-reveal-active");
-      }, 1240);
+      }, 1480);
     } else {
-      document.documentElement.classList.remove("page-enter-from-right", "page-enter-active", "rail-reveal-active");
+      const existingFloater = document.getElementById("sharedCoverFloater");
+      if (existingFloater) existingFloater.remove();
+      document.documentElement.classList.remove("page-enter-from-right", "page-enter-active", "rail-reveal-active", "cover-back-flying");
     }
   }
 
   window.addEventListener("pageshow", runReturnEntrance);
   runReturnEntrance();
+
+  function getContainedRect(box, nw, nh, alignY) {
+    if (!nw || !nh || !box.width || !box.height) {
+      return { left: box.left, top: box.top, width: box.width, height: box.height };
+    }
+    const scale = Math.min(box.width / nw, box.height / nh);
+    const width = nw * scale;
+    const height = nh * scale;
+    const left = box.left + (box.width - width) / 2;
+    const top = alignY === "top" ? box.top : box.top + (box.height - height) / 2;
+    return { left, top, width, height };
+  }
 
   grid.addEventListener("click", (event) => {
     const link = event.target.closest(".cover-link");
@@ -494,12 +615,52 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    try { sessionStorage.setItem("bookGridScrollLeft", String(grid.scrollLeft || 0)); } catch (err) {}
+    const coverImg = link.querySelector(".book-cover");
+    if (coverImg) {
+      const box = coverImg.getBoundingClientRect();
+      const hasCover = !coverImg.classList.contains("no-cover");
+      const nw = coverImg.naturalWidth || 100;
+      const nh = coverImg.naturalHeight || 150;
+      const fromRect = hasCover
+        ? getContainedRect(box, nw, nh, "top")
+        : { left: box.left, top: box.top, width: box.width, height: box.height };
+      const src = coverImg.currentSrc || coverImg.src;
+
+      try {
+        sessionStorage.setItem(
+          "bookCoverTransition",
+          JSON.stringify({ src, hasCover, fromRect, naturalWidth: nw, naturalHeight: nh })
+        );
+      } catch (err) {}
+
+      coverImg.style.opacity = "0";
+      const floater = document.createElement("img");
+      floater.src = src;
+      floater.alt = "";
+      floater.referrerPolicy = "no-referrer";
+      floater.style.cssText =
+        "position:fixed;left:0;top:0;z-index:9999;pointer-events:none;display:block;" +
+        "transform:translate3d(" + fromRect.left + "px," + fromRect.top + "px,0);" +
+        "width:" + fromRect.width + "px;height:" + fromRect.height + "px;" +
+        "object-fit:" + (hasCover ? "contain" : "cover") + ";" +
+        "border-radius:" + (hasCover ? "0" : "2px") + ";" +
+        "filter:" + (hasCover ? "drop-shadow(0 6px 12px rgba(0,0,0,0.16))" : "none") + ";" +
+        "transition:filter 0.48s ease;";
+      document.body.appendChild(floater);
+      requestAnimationFrame(() => {
+        floater.style.filter = hasCover
+          ? "drop-shadow(0 14px 24px rgba(0,0,0,0.22))"
+          : "drop-shadow(0 14px 28px rgba(0,0,0,0.24))";
+      });
+    }
+
     sessionStorage.setItem("bookTransition", "to-detail");
     document.documentElement.classList.add("page-transition-lock");
     document.body.classList.add("page-exit-right");
 
     setTimeout(() => {
       window.location.href = targetHref;
-    }, 640);
+    }, 480);
   });
 });

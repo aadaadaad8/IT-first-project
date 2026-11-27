@@ -13,6 +13,9 @@
     if (sessionStorage.getItem("bookTransition") === "to-detail") {
       document.documentElement.classList.add("detail-enter-pending");
     }
+    if (sessionStorage.getItem("bookCoverTransition")) {
+      document.documentElement.classList.add("detail-cover-flying");
+    }
   </script>
   <link rel="stylesheet" href="detail.css">
 
@@ -20,6 +23,29 @@
   <script defer src="detail.js"></script>
 </head>
 <body>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem("bookCoverTransition");
+        if (!raw || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var data = JSON.parse(raw);
+        if (!data || !data.fromRect || !data.src) return;
+        var img = document.createElement("img");
+        img.id = "sharedCoverFloater";
+        img.src = data.src;
+        img.alt = "";
+        img.referrerPolicy = "no-referrer";
+        img.style.cssText =
+          "position:fixed;left:0;top:0;z-index:9999;pointer-events:none;display:block;will-change:transform,width,height;" +
+          "transform:translate3d(" + data.fromRect.left + "px," + data.fromRect.top + "px,0);" +
+          "width:" + data.fromRect.width + "px;height:" + data.fromRect.height + "px;" +
+          "object-fit:" + (data.hasCover ? "contain" : "cover") + ";" +
+          "border-radius:" + (data.hasCover ? "0" : "2px") + ";" +
+          "filter:" + (data.hasCover ? "drop-shadow(0 14px 24px rgba(0,0,0,0.22))" : "drop-shadow(0 14px 28px rgba(0,0,0,0.24))") + ";";
+        document.body.appendChild(img);
+      } catch (e) {}
+    })();
+  </script>
   <div class="hero-art" id="heroArt" aria-hidden="true"></div>
 
   <header class="detail-top">

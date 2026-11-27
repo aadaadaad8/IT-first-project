@@ -381,6 +381,16 @@ body {
   transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+html.detail-cover-flying .detail-cover {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+html.detail-cover-handoff .detail-cover {
+  opacity: 1 !important;
+  transition: none !important;
+}
+
 /* Entrance: white rectangle enters from the left moving right with info already on it */
 html.detail-enter-pending .detail-card {
   transform: translateX(-44vw);
@@ -391,19 +401,20 @@ html.detail-enter-pending.detail-enter-active .detail-card {
   transform: translateX(0);
   opacity: 1;
   transition:
-    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.28s ease-out;
+    transform 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease-out;
 }
 
-/* Reverse (Back button): hide info first, then slide empty white rectangle left */
+/* Reverse (Back button): keep info on white rectangle and slide it left immediately while fading outer info */
 html.detail-exiting-info .hero-art,
 html.detail-exiting-info .detail-top,
-html.detail-exiting-info .sales-note,
-html.detail-exiting-info .detail-cover,
-html.detail-exiting-info .detail-main,
-html.detail-exiting-info .detail-actions {
+html.detail-exiting-info .sales-note {
   opacity: 0 !important;
-  transition: opacity 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+html.detail-exiting-info .detail-actions {
   pointer-events: none;
 }
 
@@ -411,8 +422,8 @@ html.detail-exiting-card .detail-card {
   transform: translateX(-44vw);
   opacity: 0;
   transition:
-    transform 0.78s cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 0.28s ease-in 0.46s;
+    transform 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease-in 0.65s;
 }
 
 @media (prefers-reduced-motion: reduce) {

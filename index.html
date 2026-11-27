@@ -13,6 +13,9 @@
     if (sessionStorage.getItem("bookTransition") === "back-to-list") {
       document.documentElement.classList.add("page-enter-from-right");
     }
+    if (sessionStorage.getItem("bookCoverBackTransition")) {
+      document.documentElement.classList.add("cover-back-flying");
+    }
   </script>
   <link rel="stylesheet" href="books.css">
 
@@ -20,6 +23,29 @@
   <script defer src="books.js"></script>
 </head>
 <body>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem("bookCoverBackTransition");
+        if (!raw || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var data = JSON.parse(raw);
+        if (!data || !data.fromRect || !data.src) return;
+        var img = document.createElement("img");
+        img.id = "sharedCoverFloater";
+        img.src = data.src;
+        img.alt = "";
+        img.referrerPolicy = "no-referrer";
+        img.style.cssText =
+          "position:fixed;left:0;top:0;z-index:9999;pointer-events:none;display:block;will-change:transform,width,height;" +
+          "transform:translate3d(" + data.fromRect.left + "px," + data.fromRect.top + "px,0);" +
+          "width:" + data.fromRect.width + "px;height:" + data.fromRect.height + "px;" +
+          "object-fit:" + (data.hasCover ? "contain" : "cover") + ";" +
+          "border-radius:" + (data.hasCover ? "0" : "2px") + ";" +
+          "filter:" + (data.hasCover ? "drop-shadow(0 18px 28px rgba(0,0,0,0.28))" : "drop-shadow(0 18px 40px rgba(0,0,0,0.3))") + ";";
+        document.body.appendChild(img);
+      } catch (e) {}
+    })();
+  </script>
   <button type="button" id="menuButton" class="menu-button" aria-label="Show or hide the side menu" aria-controls="sideRail">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
       <path d="M4 6h16M4 12h16M4 18h16"/>

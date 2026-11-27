@@ -62,11 +62,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const rootEl = document.documentElement;
+  let coverFlightData = null;
+  try {
+    const rawFlight = sessionStorage.getItem("bookCoverTransition");
+    if (rawFlight) {
+      coverFlightData = JSON.parse(rawFlight);
+      sessionStorage.removeItem("bookCoverTransition");
+    }
+  } catch (err) {}
+
+  let flightInProgress = Boolean(coverFlightData && !reduceMotion);
+  let deferredUpgrade = null;
 
   if (rootEl.classList.contains("detail-enter-pending")) {
     sessionStorage.removeItem("bookTransition");
     if (reduceMotion) {
-      rootEl.classList.remove("detail-enter-pending");
+      rootEl.classList.remove("detail-enter-pending", "detail-cover-flying");
+      flightInProgress = false;
     } else {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -75,8 +87,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       setTimeout(() => {
         rootEl.classList.remove("detail-enter-pending", "detail-enter-active");
-      }, 820);
+      }, 1070);
     }
+  } else if (!flightInProgress) {
+    rootEl.classList.remove("detail-cover-flying");
   }
 
   let exitingBack = false;
@@ -100,13 +114,40 @@ document.addEventListener("DOMContentLoaded", () => {
     if (exitingBack) return;
     exitingBack = true;
 
-    sessionStorage.setItem("bookTransition", "back-to-list");
-    rootEl.classList.remove("detail-content-revealed");
-    rootEl.classList.add("detail-exiting-info");
+    const cBox = coverImg.getBoundingClientRect();
+    const nw = coverImg.naturalWidth || 100;
+    const nh = coverImg.naturalHeight || 150;
+    const hasCoverNow = !coverImg.classList.contains("no-cover");
+    const fromRect = hasCoverNow
+      ? getContainedRect(cBox, nw, nh)
+      : { left: cBox.left, top: cBox.top, width: cBox.width, height: cBox.height };
+    const coverCurrentSrc = coverImg.currentSrc || coverImg.src;
 
-    setTimeout(() => {
-      rootEl.classList.add("detail-exiting-card");
-    }, 340);
+    try {
+      sessionStorage.setItem(
+        "bookCoverBackTransition",
+        JSON.stringify({ title, src: coverCurrentSrc, hasCover: hasCoverNow, fromRect, naturalWidth: nw, naturalHeight: nh })
+      );
+    } catch (err) {}
+
+    coverImg.style.opacity = "0";
+    coverImg.style.transition = "none";
+
+    const backFloater = document.createElement("img");
+    backFloater.src = coverCurrentSrc;
+    backFloater.alt = "";
+    backFloater.referrerPolicy = "no-referrer";
+    backFloater.style.cssText =
+      "position:fixed;left:0;top:0;z-index:9999;pointer-events:none;display:block;" +
+      "transform:translate3d(" + fromRect.left + "px," + fromRect.top + "px,0);" +
+      "width:" + fromRect.width + "px;height:" + fromRect.height + "px;" +
+      "object-fit:" + (hasCoverNow ? "contain" : "cover") + ";" +
+      "border-radius:" + (hasCoverNow ? "0" : "2px") + ";" +
+      "filter:" + (hasCoverNow ? "drop-shadow(0 18px 28px rgba(0,0,0,0.28))" : "drop-shadow(0 18px 40px rgba(0,0,0,0.3))") + ";";
+    document.body.appendChild(backFloater);
+
+    sessionStorage.setItem("bookTransition", "back-to-list");
+    rootEl.classList.add("detail-exiting-info", "detail-exiting-card");
 
     setTimeout(() => {
       if (cameFromSite && window.history.length > 1) {
@@ -114,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         window.location.href = $("backLink").href;
       }
-    }, 860);
+    }, 480);
   });
 
   const SAVED_KEY = "savedBooks_v1";
@@ -301,29 +342,138 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function getContainedRect(box, nw, nh) {
+    if (!nw || !nh || !box.width || !box.height) {
+      return { left: box.left, top: box.top, width: box.width, height: box.height };
+    }
+    const scale = Math.min(box.width / nw, box.height / nh);
+    const width = nw * scale;
+    const height = nh * scale;
+    const left = box.left + (box.width - width) / 2;
+    const top = box.top + (box.height - height) / 2;
+    return { left, top, width, height };
+  }
+
   coverImg.alt = title;
-  coverImg.classList.add("no-cover");
-  coverImg.src = NO_COVER_IMG;
+  if (flightInProgress && coverFlightData) {
+    if (coverFlightData.hasCover) {
+      coverImg.classList.remove("no-cover");
+      coverImg.style.aspectRatio = coverFlightData.naturalWidth + " / " + coverFlightData.naturalHeight;
+      $("heroArt").style.backgroundImage = 'url("' + coverFlightData.src + '")';
+      $("heroArt").classList.add("ready");
+    } else {
+      coverImg.classList.add("no-cover");
+    }
+    coverImg.src = coverFlightData.src;
+
+    const detailCardEl = $("detailCard");
+    const coverBox = coverImg.getBoundingClientRect();
+    const transformStr = window.getComputedStyle(detailCardEl).transform;
+    let offsetX = 0;
+    let offsetY = 0;
+    if (transformStr && transformStr !== "none") {
+      const matrix = new DOMMatrix(transformStr);
+      offsetX = matrix.m41;
+      offsetY = matrix.m42;
+    }
+    const settledBox = {
+      left: coverBox.left - offsetX,
+      top: coverBox.top - offsetY,
+      width: coverBox.width,
+      height: coverBox.height,
+    };
+    const toRect = coverFlightData.hasCover
+      ? getContainedRect(settledBox, coverFlightData.naturalWidth, coverFlightData.naturalHeight)
+      : settledBox;
+
+    let floater = document.getElementById("sharedCoverFloater");
+    if (!floater) {
+      floater = document.createElement("img");
+      floater.src = coverFlightData.src;
+      floater.alt = "";
+      floater.referrerPolicy = "no-referrer";
+      floater.style.cssText =
+        "position:fixed;left:0;top:0;z-index:9999;pointer-events:none;display:block;will-change:transform,width,height;" +
+        "transform:translate3d(" + coverFlightData.fromRect.left + "px," + coverFlightData.fromRect.top + "px,0);" +
+        "width:" + coverFlightData.fromRect.width + "px;height:" + coverFlightData.fromRect.height + "px;" +
+        "object-fit:" + (coverFlightData.hasCover ? "contain" : "cover") + ";" +
+        "border-radius:" + (coverFlightData.hasCover ? "0" : "2px") + ";" +
+        "filter:" + (coverFlightData.hasCover ? "drop-shadow(0 14px 24px rgba(0,0,0,0.22))" : "drop-shadow(0 14px 28px rgba(0,0,0,0.24))") + ";";
+      document.body.appendChild(floater);
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        floater.style.transition =
+          "transform 1.05s cubic-bezier(0.22,1,0.36,1),width 1.05s cubic-bezier(0.22,1,0.36,1),height 1.05s cubic-bezier(0.22,1,0.36,1),filter 1.05s cubic-bezier(0.22,1,0.36,1)";
+        floater.style.transform = "translate3d(" + toRect.left + "px," + toRect.top + "px,0)";
+        floater.style.width = toRect.width + "px";
+        floater.style.height = toRect.height + "px";
+        floater.style.filter = coverFlightData.hasCover
+          ? "drop-shadow(0 18px 28px rgba(0,0,0,0.28))"
+          : "drop-shadow(0 18px 40px rgba(0,0,0,0.3))";
+      });
+    });
+
+    setTimeout(() => {
+      flightInProgress = false;
+      rootEl.classList.add("detail-cover-handoff");
+      rootEl.classList.remove("detail-cover-flying");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          floater.remove();
+          if (deferredUpgrade) {
+            const nextUrl = deferredUpgrade;
+            deferredUpgrade = null;
+            const decoder = new Image();
+            decoder.src = nextUrl;
+            const applyUpgrade = () => {
+              coverImg.classList.remove("no-cover");
+              coverImg.src = nextUrl;
+            };
+            if (typeof decoder.decode === "function") {
+              decoder.decode().then(applyUpgrade, applyUpgrade);
+            } else {
+              decoder.onload = applyUpgrade;
+            }
+          }
+          setTimeout(() => {
+            rootEl.classList.remove("detail-cover-handoff");
+          }, 30);
+        });
+      });
+    }, 1070);
+  } else {
+    coverImg.classList.add("no-cover");
+    coverImg.src = NO_COVER_IMG;
+  }
 
   findCoverUrl().then((mediumUrl) => {
     if (!mediumUrl) return;
-
     const largeUrl = mediumUrl.replace("-M.jpg", "-L.jpg");
     const loader = new Image();
     loader.onload = () => {
       coverImg.alt = title;
-      coverImg.classList.remove("no-cover");
-      coverImg.src = largeUrl;
       $("heroArt").style.backgroundImage = 'url("' + largeUrl + '")';
       $("heroArt").classList.add("ready");
+      if (flightInProgress) {
+        deferredUpgrade = largeUrl;
+      } else {
+        coverImg.classList.remove("no-cover");
+        coverImg.src = largeUrl;
+      }
     };
     loader.onerror = () => {
       const fallback = new Image();
       fallback.onload = () => {
-        coverImg.classList.remove("no-cover");
-        coverImg.src = mediumUrl;
         $("heroArt").style.backgroundImage = 'url("' + mediumUrl + '")';
         $("heroArt").classList.add("ready");
+        if (flightInProgress) {
+          deferredUpgrade = mediumUrl;
+        } else {
+          coverImg.classList.remove("no-cover");
+          coverImg.src = mediumUrl;
+        }
       };
       fallback.src = mediumUrl;
     };
