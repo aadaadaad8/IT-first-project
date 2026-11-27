@@ -75,7 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       setTimeout(() => {
         rootEl.classList.remove("detail-enter-pending", "detail-enter-active");
-        rootEl.classList.add("detail-content-revealed");
       }, 820);
     }
   }

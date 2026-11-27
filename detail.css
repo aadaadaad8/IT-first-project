@@ -381,18 +381,9 @@ body {
   transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Stage 1 (Entrance): hide info & keep only background + white rectangle off-left */
-html.detail-enter-pending .hero-art,
-html.detail-enter-pending .detail-top,
-html.detail-enter-pending .sales-note,
-html.detail-enter-pending .detail-cover,
-html.detail-enter-pending .detail-main,
-html.detail-enter-pending .detail-actions {
-  opacity: 0 !important;
-}
-
+/* Entrance: white rectangle enters from the right moving left with info already on it */
 html.detail-enter-pending .detail-card {
-  transform: translateX(-44vw);
+  transform: translateX(44vw);
   opacity: 0;
 }
 
@@ -402,38 +393,6 @@ html.detail-enter-pending.detail-enter-active .detail-card {
   transition:
     transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.28s ease-out;
-}
-
-/* Stage 2 (Entrance): reveal information after rectangle settles */
-html.detail-content-revealed .detail-top,
-html.detail-content-revealed .sales-note,
-html.detail-content-revealed .detail-main,
-html.detail-content-revealed .detail-actions {
-  animation: detailInfoReveal 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-html.detail-content-revealed .detail-cover {
-  animation: detailCoverReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes detailCoverReveal {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes detailInfoReveal {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Reverse (Back button): hide info first, then slide empty white rectangle left */
@@ -458,10 +417,6 @@ html.detail-exiting-card .detail-card {
 
 @media (prefers-reduced-motion: reduce) {
   html.detail-enter-pending.detail-enter-active .detail-card,
-  html.detail-content-revealed .detail-top,
-  html.detail-content-revealed .sales-note,
-  html.detail-content-revealed .detail-main,
-  html.detail-content-revealed .detail-actions,
   html.detail-exiting-info .hero-art,
   html.detail-exiting-info .detail-top,
   html.detail-exiting-info .sales-note,

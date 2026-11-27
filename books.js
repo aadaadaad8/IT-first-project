@@ -445,20 +445,20 @@ document.addEventListener("DOMContentLoaded", () => {
   let navigatingToDetail = false;
 
   function runReturnEntrance() {
-    document.body.classList.remove("page-exit-right");
+    document.body.classList.remove("page-exit-left", "page-exit-right");
     document.documentElement.classList.remove("page-transition-lock");
     navigatingToDetail = false;
 
     if (sessionStorage.getItem("bookTransition") === "back-to-list") {
       sessionStorage.removeItem("bookTransition");
       if (reduceMotion) {
-        document.documentElement.classList.remove("page-enter-from-right", "page-enter-active");
+        document.documentElement.classList.remove("page-enter-from-right", "page-enter-active", "rail-reveal-active");
         return;
       }
       document.documentElement.classList.add("page-transition-lock", "page-enter-from-right");
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          document.documentElement.classList.add("page-enter-active");
+          document.documentElement.classList.add("page-enter-active", "rail-reveal-active");
         });
       });
       setTimeout(() => {
@@ -468,8 +468,11 @@ document.addEventListener("DOMContentLoaded", () => {
           "page-enter-active"
         );
       }, 760);
+      setTimeout(() => {
+        document.documentElement.classList.remove("rail-reveal-active");
+      }, 1240);
     } else {
-      document.documentElement.classList.remove("page-enter-from-right", "page-enter-active");
+      document.documentElement.classList.remove("page-enter-from-right", "page-enter-active", "rail-reveal-active");
     }
   }
 
@@ -493,7 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     sessionStorage.setItem("bookTransition", "to-detail");
     document.documentElement.classList.add("page-transition-lock");
-    document.body.classList.add("page-exit-right");
+    document.body.classList.add("page-exit-left");
 
     setTimeout(() => {
       window.location.href = targetHref;
