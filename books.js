@@ -440,4 +440,63 @@ document.addEventListener("DOMContentLoaded", () => {
   menuButton.addEventListener("click", () => {
     document.body.classList.toggle("rail-hidden");
   });
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let navigatingToDetail = false;
+
+  function runReturnEntrance() {
+    document.body.classList.remove("page-exit-right");
+    document.documentElement.classList.remove("page-transition-lock");
+    navigatingToDetail = false;
+
+    if (sessionStorage.getItem("bookTransition") === "back-to-list") {
+      sessionStorage.removeItem("bookTransition");
+      if (reduceMotion) {
+        document.documentElement.classList.remove("page-enter-from-right", "page-enter-active");
+        return;
+      }
+      document.documentElement.classList.add("page-transition-lock", "page-enter-from-right");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.documentElement.classList.add("page-enter-active");
+        });
+      });
+      setTimeout(() => {
+        document.documentElement.classList.remove(
+          "page-transition-lock",
+          "page-enter-from-right",
+          "page-enter-active"
+        );
+      }, 760);
+    } else {
+      document.documentElement.classList.remove("page-enter-from-right", "page-enter-active");
+    }
+  }
+
+  window.addEventListener("pageshow", runReturnEntrance);
+  runReturnEntrance();
+
+  grid.addEventListener("click", (event) => {
+    const link = event.target.closest(".cover-link");
+    if (!link || suppressClick) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    event.preventDefault();
+    if (navigatingToDetail) return;
+    navigatingToDetail = true;
+
+    const targetHref = link.href;
+    if (reduceMotion) {
+      window.location.href = targetHref;
+      return;
+    }
+
+    sessionStorage.setItem("bookTransition", "to-detail");
+    document.documentElement.classList.add("page-transition-lock");
+    document.body.classList.add("page-exit-right");
+
+    setTimeout(() => {
+      window.location.href = targetHref;
+    }, 640);
+  });
 });

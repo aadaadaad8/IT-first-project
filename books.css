@@ -546,3 +546,41 @@ body {
     gap: 36px;
   }
 }
+
+/* Page transition: exit to right & return from right */
+html.page-transition-lock,
+html.page-transition-lock body {
+  overflow-x: hidden;
+}
+
+body.page-exit-right .menu-button,
+body.page-exit-right .side-rail,
+body.page-exit-right .page {
+  transform: translateX(100vw);
+  transition: transform 0.72s cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: none;
+}
+
+html.page-enter-from-right .menu-button,
+html.page-enter-from-right .side-rail,
+html.page-enter-from-right .page {
+  transform: translateX(100vw);
+}
+
+html.page-enter-from-right.page-enter-active .menu-button,
+html.page-enter-from-right.page-enter-active .side-rail,
+html.page-enter-from-right.page-enter-active .page {
+  transform: translateX(0);
+  transition: transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-exit-right .menu-button,
+  body.page-exit-right .side-rail,
+  body.page-exit-right .page,
+  html.page-enter-from-right.page-enter-active .menu-button,
+  html.page-enter-from-right.page-enter-active .side-rail,
+  html.page-enter-from-right.page-enter-active .page {
+    transition: none !important;
+  }
+}

@@ -60,6 +60,27 @@ document.addEventListener("DOMContentLoaded", () => {
   $("wikiLink").href = "https://en.wikipedia.org/wiki/Special:Search?search=" + searchText;
   $("findLink").href = "https://openlibrary.org/search?q=" + searchText;
 
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rootEl = document.documentElement;
+
+  if (rootEl.classList.contains("detail-enter-pending")) {
+    sessionStorage.removeItem("bookTransition");
+    if (reduceMotion) {
+      rootEl.classList.remove("detail-enter-pending");
+    } else {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          rootEl.classList.add("detail-enter-active");
+        });
+      });
+      setTimeout(() => {
+        rootEl.classList.remove("detail-enter-pending", "detail-enter-active");
+        rootEl.classList.add("detail-content-revealed");
+      }, 820);
+    }
+  }
+
+  let exitingBack = false;
   $("backLink").addEventListener("click", (event) => {
     let cameFromSite = false;
     try {
@@ -67,10 +88,34 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       cameFromSite = false;
     }
-    if (cameFromSite && window.history.length > 1) {
-      event.preventDefault();
-      window.history.back();
+
+    if (reduceMotion) {
+      if (cameFromSite && window.history.length > 1) {
+        event.preventDefault();
+        window.history.back();
+      }
+      return;
     }
+
+    event.preventDefault();
+    if (exitingBack) return;
+    exitingBack = true;
+
+    sessionStorage.setItem("bookTransition", "back-to-list");
+    rootEl.classList.remove("detail-content-revealed");
+    rootEl.classList.add("detail-exiting-info");
+
+    setTimeout(() => {
+      rootEl.classList.add("detail-exiting-card");
+    }, 340);
+
+    setTimeout(() => {
+      if (cameFromSite && window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = $("backLink").href;
+      }
+    }, 860);
   });
 
   const SAVED_KEY = "savedBooks_v1";
