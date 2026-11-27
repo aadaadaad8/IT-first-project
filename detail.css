@@ -381,9 +381,9 @@ body {
   transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Entrance: white rectangle enters from the right moving left with info already on it */
+/* Entrance: white rectangle enters from the left moving right with info already on it */
 html.detail-enter-pending .detail-card {
-  transform: translateX(44vw);
+  transform: translateX(-44vw);
   opacity: 0;
 }
 

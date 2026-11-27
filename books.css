@@ -553,10 +553,10 @@ html.page-transition-lock body {
   overflow-x: hidden;
 }
 
-body.page-exit-left .menu-button,
-body.page-exit-left .side-rail,
-body.page-exit-left .page {
-  transform: translateX(-100vw);
+body.page-exit-right .menu-button,
+body.page-exit-right .side-rail,
+body.page-exit-right .page {
+  transform: translateX(100vw);
   transition: transform 0.72s cubic-bezier(0.32, 0.72, 0, 1);
   pointer-events: none;
 }
@@ -620,9 +620,9 @@ html.rail-reveal-active .rail-link:nth-child(4) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.page-exit-left .menu-button,
-  body.page-exit-left .side-rail,
-  body.page-exit-left .page,
+  body.page-exit-right .menu-button,
+  body.page-exit-right .side-rail,
+  body.page-exit-right .page,
   html.page-enter-from-right.page-enter-active .menu-button,
   html.page-enter-from-right.page-enter-active .side-rail,
   html.page-enter-from-right.page-enter-active .page {

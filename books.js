@@ -496,7 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     sessionStorage.setItem("bookTransition", "to-detail");
     document.documentElement.classList.add("page-transition-lock");
-    document.body.classList.add("page-exit-left");
+    document.body.classList.add("page-exit-right");
 
     setTimeout(() => {
       window.location.href = targetHref;
